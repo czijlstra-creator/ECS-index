@@ -66,7 +66,7 @@ def debug_gcore():
                     pid = proj["id"]
                     for ep4 in [f"gpu/baremetal/{pid}/76/flavors", f"gpu/baremetal/{pid}/76/clusters", f"gpu/baremetal/{pid}/76/"]:
                         r4 = requests.get(f"https://api.gcore.com/cloud/v3/{ep4}", headers=headers, timeout=15)
-                        print(f"  gpu-v3 /cloud/v3/{ep4}: {r4.status_code} {r4.text[:300]}")
+                        print(f"  gpu-v3 /cloud/v3/{ep4}: {r4.status_code} {r4.text[:2000]}")
             break
         else:
             print(f"  Response: {r.text[:200]}")
