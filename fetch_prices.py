@@ -55,6 +55,12 @@ def debug_gcore():
                             print(f"  Regio {rid}: geen GPU ({len(flavors)} flavors)")
                     else:
                         print(f"  Regio {rid}: {r2.status_code}")
+            # GPU-Virtual API
+            for proj in data.get("results", [])[:1]:
+                pid = proj["id"]
+                for ep in [f"gpu-virtual/{pid}/1/flavors", f"gpu-virtual/{pid}/flavors", "gpu-virtual/flavors", f"gpu-virtual/{pid}/1/clusters"]:
+                    r3 = requests.get(f"https://api.gcore.com/cloud/v1/{ep}", headers=headers, timeout=15)
+                    print(f"  gpu-virtual /v1/{ep}: {r3.status_code} {r3.text[:150]}")
             break
         else:
             print(f"  Response: {r.text[:200]}")
@@ -94,9 +100,9 @@ def debug_ovh():
             code = a.get("planCode", "")
             name = a.get("invoiceName", "")
             if any(k in (code + name).lower() for k in ["gpu", "h100", "a100"]):
-                gpu_items.append({"planCode": code, "name": name})
+                gpu_items.append({"planCode": code, "name": name, "EUR/uur": round(a.get("pricings", [{}])[0].get("price", 0) * 1e-8, 6)})
         print(f"GPU-gerelateerde items ({len(gpu_items)}):")
-        for item in gpu_items[:20]:
+        for item in gpu_items[:60]:
             print(f"  {item}")
     else:
         print(f"Response: {r.text[:300]}")
