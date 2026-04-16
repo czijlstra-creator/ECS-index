@@ -1,239 +1,202 @@
 #!/usr/bin/env python3
 """
-ECS H100-EU Index — debug / discovery script
-Drukt ruwe API-responses af zodat we de juiste endpoints kunnen vinden.
+ECS H100-EU Index — dagelijkse prijsfetcher
+Haalt GPU-prijzen op bij Gcore (L40S) en OVHcloud (H100) en schrijft ze
+naar prices_history.csv en prices_latest.json.
 """
 
-import os
+import csv
 import json
-import hashlib
+import os
 import requests
-from datetime import datetime, timezone, date
+from datetime import date, datetime, timezone
 
 
-# ══════════════════════════════════════════════════════════════════════════
-#  GCORE — discovery
-# ══════════════════════════════════════════════════════════════════════════
+# ── Configuratie ──────────────────────────────────────────────────────────────
 
-def debug_gcore():
-    print("\n── GCORE ─────────────────────────────────────")
-    token = os.environ.get("GCORE_API_KEY", "")
-    if not token:
-        print("FOUT: GCORE_API_KEY niet ingesteld")
-        return
+GCORE_PROJECT_ID = 1186222
+GCORE_REGION_ID  = 76               # Luxembourg-2
+GCORE_FLAVOR     = "bm3-infrastructure-ai-large-l40s-48-8"
+GCORE_GPU_COUNT  = 8                # 8x NVIDIA L40S per server
+GCORE_GPU_MODEL  = "L40S"
+GCORE_REGION     = "Luxembourg-2 (EU)"
 
-    # Probeer beide auth-formaten
-    for auth_format in [f"APIKey {token}", f"Bearer {token}"]:
-        headers = {"Authorization": auth_format}
-        print(f"\nAuth-formaat: {auth_format[:30]}...")
+OVH_SUBSIDIARY   = "FR"             # EUR-prijzen
+OVH_REGION       = "EU (FR)"
 
-        # Test 1: projecten
-        r = requests.get("https://api.gcore.com/cloud/v1/projects",
-                         headers=headers, timeout=15)
-        print(f"  /projects → status {r.status_code}")
-        if r.status_code == 200:
-            data = r.json()
-            print(f"  Response: {json.dumps(data)[:300]}")
-            # Regio's ophalen
-            r_reg = requests.get("https://api.gcore.com/cloud/v1/regions", headers=headers, timeout=15)
-            all_regions = r_reg.json().get("results", [{"id": 76}, {"id": 9}]) if r_reg.status_code == 200 else [{"id": 76}, {"id": 9}]
-            print(f"  Regio's: {[(r['id'], r.get('display_name','?')) for r in all_regions]}")
-            # Probeer flavors voor elk project
-            for proj in data.get("results", [])[:2]:
-                pid = proj["id"]
-                for reg in all_regions:
-                    rid = reg.get("id")
-                    r2 = requests.get(
-                        f"https://api.gcore.com/cloud/v1/flavors/{pid}/{rid}",
-                        headers=headers, timeout=15)
-                    if r2.status_code == 200:
-                        flavors = r2.json().get("results", [])
-                        gpu = [f["name"] for f in flavors if any(k in f.get("name","").lower() for k in ["gpu","h100","a100"])]
-                        if gpu:
-                            print(f"  Regio {rid}: GPU: {gpu[:5]}")
-                        else:
-                            print(f"  Regio {rid}: geen GPU ({len(flavors)} flavors)")
-                    else:
-                        print(f"  Regio {rid}: {r2.status_code}")
-            # GPU-Virtual API
-            for proj in data.get("results", [])[:1]:
-                pid = proj["id"]
-                for ep in [f"gpu-virtual/{pid}/1/flavors", f"gpu-virtual/{pid}/flavors", "gpu-virtual/flavors", f"gpu-virtual/{pid}/1/clusters"]:
-                    r3 = requests.get(f"https://api.gcore.com/cloud/v1/{ep}", headers=headers, timeout=15)
-                    print(f"  gpu-virtual /v1/{ep}: {r3.status_code} {r3.text[:150]}")
-                # GPU Cloud v3
-                for proj in data.get("results", [])[:1]:
-                    pid = proj["id"]
-                    for ep4 in [f"gpu/baremetal/{pid}/76/flavors", f"gpu/baremetal/{pid}/76/clusters", f"gpu/baremetal/{pid}/76/"]:
-                        r4 = requests.get(f"https://api.gcore.com/cloud/v3/{ep4}", headers=headers, timeout=15)
-                        print(f"  gpu-v3 /cloud/v3/{ep4}: {r4.status_code} {r4.text[:2000]}")
-                # GPU Cloud v3 — pricing discovery
-                flavor_name = "bm3-infrastructure-ai-large-l40s-48-8"
-                for ep5 in [
-                    f"gpu/baremetal/{pid}/76/prices",
-                    f"gpu/baremetal/{pid}/76/flavors/{flavor_name}",
-                    f"gpu/baremetal/{pid}/76/flavor-prices",
-                    f"gpu/{pid}/76/prices",
-                ]:
-                    r5 = requests.get(f"https://api.gcore.com/cloud/v3/{ep5}", headers=headers, timeout=15)
-                    print(f"  price-v3 /cloud/v3/{ep5}: {r5.status_code} {r5.text[:500]}")
-                for ep6 in [f"gpu-baremetal/{pid}/76/prices", f"baremetal/{pid}/76/prices", f"prices/{pid}/76"]:
-                    r6 = requests.get(f"https://api.gcore.com/cloud/v1/{ep6}", headers=headers, timeout=15)
-                    print(f"  price-v1 /cloud/v1/{ep6}: {r6.status_code} {r6.text[:500]}")
-                # GPU Cloud v1 — pricing via /cloud/v1/pricing/ (correct path)
-                flavor_name = "bm3-infrastructure-ai-large-l40s-48-8"
-                for ep7 in [
-                    f"pricing/1186222/76/gpu/baremetal/{flavor_name}",
-                    f"pricing/1186222/76/gpu/baremetal/flavors",
-                    f"pricing/1186222/76/ai/clusters",
-                    f"pricing/1186222/76/baremetal/{flavor_name}",
-                    f"pricing/1186222/76/baremetal/flavors",
-                ]:
-                    r7 = requests.get(f"https://api.gcore.com/cloud/v1/{ep7}", headers=headers, timeout=15)
-                    print(f"  pricing-v1 /cloud/v1/{ep7}: {r7.status_code} {r7.text[:500]}")
-                for ep8 in [
-                    f"pricing/1186222/76/gpu/baremetal/{flavor_name}",
-                    f"pricing/1186222/76/gpu/baremetal/flavors",
-                ]:
-                    r8 = requests.get(f"https://api.gcore.com/cloud/v3/{ep8}", headers=headers, timeout=15)
-                    print(f"  pricing-v3 /cloud/v3/{ep8}: {r8.status_code} {r8.text[:500]}")
-                # Try POST to /cloud/v1/pricing/ai/clusters (GET=405 -> path exists, POST may work)
-                post_body = {"name": "price-check", "flavor": "bm3-infrastructure-ai-large-l40s-48-8", "interfaces": [{"type": "external"}]}
-                r_post = requests.post(
-                    "https://api.gcore.com/cloud/v1/pricing/1186222/76/ai/clusters",
-                    headers={**headers, "Content-Type": "application/json"},
-                    json=post_body,
-                    timeout=15
-                )
-                print(f"  pricing-POST ai/clusters: {r_post.status_code} {r_post.text[:500]}")
-            break
-        else:
-            print(f"  Response: {r.text[:200]}")
+# OVH H100 bare-metal plans: planCode → (gpu_count, label)
+# Naamgeving: h100-{geheugen_GB}; ratio 380:760:1520 = 1:2:4 → vermoedelijk 4/8/16x H100 SXM 80GB
+OVH_H100_PLANS = {
+    "h100-380":  (4,  "H100 SXM 4-GPU bare metal"),
+    "h100-760":  (8,  "H100 SXM 8-GPU bare metal"),
+    "h100-1520": (16, "H100 SXM 16-GPU bare metal"),
+}
+
+CSV_FILE  = "prices_history.csv"
+JSON_FILE = "prices_latest.json"
+CSV_FIELDS = [
+    "date", "provider", "gpu_model", "region", "instance_type",
+    "gpu_count", "price_per_hour_eur", "price_per_gpu_hour_eur", "note",
+]
 
 
-# ══════════════════════════════════════════════════════════════════════════
-#  OVHCLOUD — discovery
-# ══════════════════════════════════════════════════════════════════════════
+# ── Gcore ─────────────────────────────────────────────────────────────────────
 
-def debug_ovh():
-    print("\n── OVHCLOUD ──────────────────────────────────")
-
-    # Test publieke catalogus
-    url = "https://eu.api.ovh.com/v1/order/catalog/public/cloud?ovhSubsidiary=FR"
-    r = requests.get(url, timeout=15)
-    print(f"Publieke catalogus → status {r.status_code}")
-
-    if r.status_code == 200:
-        catalog = r.json()
-        plans = catalog.get("plans", [])
-        print(f"Aantal plans: {len(plans)}")
-
-        # Zoek op gpu / h100 / a100 in plan codes en namen
-        gpu_items = []
-        for plan in plans:
-            code = plan.get("planCode", "")
-            name = plan.get("invoiceName", "")
-            if any(k in (code + name).lower() for k in ["gpu", "h100", "a100", "b3", "t2"]):
-                gpu_items.append({"planCode": code, "name": name})
-            for addon in plan.get("addons", []):
-                acode = addon.get("planCode", "")
-                aname = addon.get("product", {}).get("name", "")
-                if any(k in (acode + aname).lower() for k in ["gpu", "h100", "a100"]):
-                    gpu_items.append({"planCode": acode, "name": aname})
-
-        for a in catalog.get("addons", []):
-            code = a.get("planCode", "")
-            name = a.get("invoiceName", "")
-            if any(k in (code + name).lower() for k in ["gpu", "h100", "a100"]):
-                gpu_items.append({"planCode": code, "name": name, "EUR/uur": round(a.get("pricings", [{}])[0].get("price", 0) * 1e-8, 6)})
-        print(f"GPU-gerelateerde items ({len(gpu_items)}):")
-        for item in gpu_items[:60]:
-            print(f"  {item}")
-    else:
-        print(f"Response: {r.text[:300]}")
-
-
-# ══════════════════════════════════════════════════════════════════════════
-#  DATACRUNCH / VERDA — discovery
-# ══════════════════════════════════════════════════════════════════════════
-
-def debug_verda():
-    print("\n── DATACRUNCH / VERDA ────────────────────────")
-    client_id     = os.environ.get("VERDA_CLIENT_ID", "")
-    client_secret = os.environ.get("VERDA_CLIENT_SECRET", "")
-
-    if not client_id:
-        print("FOUT: VERDA_CLIENT_ID niet ingesteld")
-        return
-
-    print(f"Client ID (eerste 8 tekens): {client_id[:8]}...")
-
-    # Test token endpoint
-    r = requests.post(
-        "https://api.verda.com/v1/oauth2/token",
-        json={
-            "grant_type":    "client_credentials",
-            "client_id":     client_id,
-            "client_secret": client_secret,
-        },
-        timeout=15
+def fetch_gcore_prices(api_key: str) -> list[dict]:
+    """
+    Haalt de L40S bare-metal prijs op via:
+      POST /cloud/v1/pricing/{project_id}/{region_id}/ai/clusters
+    Geeft de flavor-prijs excl. externe IP terug.
+    """
+    url = (
+        f"https://api.gcore.com/cloud/v1/pricing/"
+        f"{GCORE_PROJECT_ID}/{GCORE_REGION_ID}/ai/clusters"
     )
-    print(f"Token endpoint (verda.com) → status {r.status_code}")
-    if r.status_code == 200:
-        token = r.json()["access_token"]
-        print("  Token opgehaald ✓")
-        # Instance types ophalen
-        r2 = requests.get(
-            "https://api.verda.com/v1/instance-types",
-            headers={"Authorization": f"Bearer {token}"},
-            timeout=15
-        )
-        print(f"  /instance-types → status {r2.status_code}")
-        if r2.status_code == 200:
-            instances = r2.json()
-            gpu = [i for i in instances if "h100" in i.get("instance_type","").lower() or "a100" in i.get("instance_type","").lower()]
-            print(f"  GPU instances: {[i['instance_type'] for i in gpu]}")
-    else:
-        print(f"  Response: {r.text[:300]}")
-
-        # Probeer ook DataCrunch endpoint
-        r2 = requests.post(
-            "https://api.datacrunch.io/v1/oauth2/token",
-            json={
-                "grant_type":    "client_credentials",
-                "client_id":     client_id,
-                "client_secret": client_secret,
-            },
-            timeout=15
-        )
-        print(f"Token endpoint (datacrunch.io) → status {r2.status_code}")
-        if r2.status_code == 200:
-            token = r2.json()["access_token"]
-            print("  Token opgehaald via datacrunch.io ✓")
-            r3 = requests.get(
-                "https://api.datacrunch.io/v1/instance-types",
-                headers={"Authorization": f"Bearer {token}"},
-                timeout=15
-            )
-            print(f"  /instance-types → status {r3.status_code}: {r3.text[:300]}")
-        else:
-            print(f"  Response: {r2.text[:200]}")
+    r = requests.post(
+        url,
+        headers={
+            "Authorization": f"APIKey {api_key}",
+            "Content-Type":  "application/json",
+        },
+        json={
+            "name":       "price-check",
+            "flavor":     GCORE_FLAVOR,
+            "interfaces": [{"type": "external"}],
+        },
+        timeout=15,
+    )
+    r.raise_for_status()
+    data  = r.json()
+    price = data["per_hour"]["flavor"]   # EUR/uur excl. extern IP
+    return [{
+        "provider":               "Gcore",
+        "gpu_model":              GCORE_GPU_MODEL,
+        "region":                 GCORE_REGION,
+        "instance_type":          GCORE_FLAVOR,
+        "gpu_count":              GCORE_GPU_COUNT,
+        "price_per_hour_eur":     round(price, 4),
+        "price_per_gpu_hour_eur": round(price / GCORE_GPU_COUNT, 4),
+        "note":                   "bare metal excl. extern IP (Luxembourg-2)",
+    }]
 
 
-# ══════════════════════════════════════════════════════════════════════════
-#  MAIN
-# ══════════════════════════════════════════════════════════════════════════
+# ── OVHcloud ──────────────────────────────────────────────────────────────────
 
-def main():
-    print("ECS — API discovery run")
+def fetch_ovhcloud_prices() -> list[dict]:
+    """
+    Haalt H100 bare-metal prijzen op uit de OVHcloud publieke catalogus.
+    Filtert uitsluitend .consumption plans (excl. .monthly.postpaid).
+    Catalogusprijs: pricings[0].price in eenheden van 1e-8 EUR/uur.
+    """
+    url = (
+        "https://www.ovh.com/engine/apiv6/order/catalog/public/cloud"
+        f"?ovhSubsidiary={OVH_SUBSIDIARY}"
+    )
+    r = requests.get(url, timeout=20)
+    r.raise_for_status()
+    catalog = r.json()
+
+    # Bouw price_map: planCode → EUR/uur (alleen .consumption plans)
+    price_map: dict[str, float] = {}
+    for plan in catalog.get("plans", []):
+        code = plan.get("planCode", "")
+        if not code.endswith(".consumption"):
+            continue
+        pricings = plan.get("pricings", [])
+        if pricings:
+            price_map[code] = pricings[0].get("price", 0) * 1e-8
+
+    records = []
+    for plan_code, (gpu_count, label) in OVH_H100_PLANS.items():
+        key = f"{plan_code}.consumption"
+        if key not in price_map:
+            print(f"  WAARSCHUWING: {key} niet gevonden in OVH-catalogus")
+            continue
+        price = price_map[key]
+        records.append({
+            "provider":               "OVHcloud",
+            "gpu_model":              "H100 SXM",
+            "region":                 OVH_REGION,
+            "instance_type":          key,
+            "gpu_count":              gpu_count,
+            "price_per_hour_eur":     round(price, 4),
+            "price_per_gpu_hour_eur": round(price / gpu_count, 4),
+            "note":                   label,
+        })
+    return records
+
+
+# ── Output ────────────────────────────────────────────────────────────────────
+
+def append_to_csv(records: list[dict], today: str) -> None:
+    write_header = not os.path.exists(CSV_FILE)
+    with open(CSV_FILE, "a", newline="", encoding="utf-8") as f:
+        w = csv.DictWriter(f, fieldnames=CSV_FIELDS)
+        if write_header:
+            w.writeheader()
+        for rec in records:
+            w.writerow({"date": today, **rec})
+
+
+def write_latest_json(records: list[dict], today: str) -> None:
+    payload = {
+        "date":    today,
+        "fetched": datetime.now(timezone.utc).isoformat(),
+        "prices":  records,
+    }
+    with open(JSON_FILE, "w", encoding="utf-8") as f:
+        json.dump(payload, f, indent=2, ensure_ascii=False)
+
+
+# ── Main ──────────────────────────────────────────────────────────────────────
+
+def main() -> None:
+    today = date.today().isoformat()
+    print(f"\nECS dagelijkse prijsupdate — {today}")
     print("=" * 50)
-    debug_gcore()
-    debug_ovh()
-    debug_verda()
 
-    # Schrijf lege prices.json zodat de commit-stap niet faalt
-    with open("prices.json", "w") as f:
-        json.dump({"date": date.today().isoformat(), "status": "discovery run"}, f)
+    all_records: list[dict] = []
+
+    # Gcore
+    gcore_key = os.environ.get("GCORE_API_KEY", "")
+    if gcore_key:
+        try:
+            recs = fetch_gcore_prices(gcore_key)
+            all_records.extend(recs)
+            for rec in recs:
+                print(
+                    f"  Gcore  {rec['gpu_model']:6s} "
+                    f"({rec['region']}): "
+                    f"€{rec['price_per_hour_eur']}/hr "
+                    f"({rec['gpu_count']}x GPU), "
+                    f"€{rec['price_per_gpu_hour_eur']}/GPU/hr"
+                )
+        except Exception as exc:
+            print(f"  FOUT Gcore: {exc}")
+    else:
+        print("  GCORE_API_KEY niet ingesteld — overgeslagen")
+
+    # OVHcloud
+    try:
+        recs = fetch_ovhcloud_prices()
+        all_records.extend(recs)
+        for rec in recs:
+            print(
+                f"  OVHcloud {rec['gpu_model']:8s} "
+                f"({rec['instance_type']}): "
+                f"€{rec['price_per_hour_eur']}/hr, "
+                f"€{rec['price_per_gpu_hour_eur']}/GPU/hr"
+            )
+    except Exception as exc:
+        print(f"  FOUT OVHcloud: {exc}")
+
+    if all_records:
+        append_to_csv(all_records, today)
+        write_latest_json(all_records, today)
+        print(f"\n  → {len(all_records)} records opgeslagen in {CSV_FILE} en {JSON_FILE}")
+    else:
+        print("\n  FOUT: geen prijzen opgehaald — niets opgeslagen")
+        raise SystemExit(1)
 
 
 if __name__ == "__main__":
