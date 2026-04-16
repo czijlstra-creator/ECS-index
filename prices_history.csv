@@ -1,2 +1,6 @@
 date,provider,gpu_model,region,instance_type,gpu_count,price_per_hour_eur,price_per_gpu_hour_eur,note
 2026-04-16,Gcore,L40S,Luxembourg-2 (EU),bm3-infrastructure-ai-large-l40s-48-8,8,10.4544,1.3068,bare metal excl. extern IP (Luxembourg-2)
+2026-04-16,Gcore,L40S,Luxembourg-2 (EU),bm3-infrastructure-ai-large-l40s-48-8,8,10.4544,1.3068,bare metal excl. extern IP (Luxembourg-2)
+2026-04-16,OVHcloud,H100 SXM,EU (FR),h100-380.consumption,4,2.8,0.7,H100 SXM 4-GPU bare metal
+2026-04-16,OVHcloud,H100 SXM,EU (FR),h100-760.consumption,8,5.6,0.7,H100 SXM 8-GPU bare metal
+2026-04-16,OVHcloud,H100 SXM,EU (FR),h100-1520.consumption,16,11.2,0.7,H100 SXM 16-GPU bare metal
