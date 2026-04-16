@@ -1,0 +1,16 @@
+{
+  "date": "2026-04-16",
+  "fetched": "2026-04-16T12:44:53.267907+00:00",
+  "prices": [
+    {
+      "provider": "Gcore",
+      "gpu_model": "L40S",
+      "region": "Luxembourg-2 (EU)",
+      "instance_type": "bm3-infrastructure-ai-large-l40s-48-8",
+      "gpu_count": 8,
+      "price_per_hour_eur": 10.4544,
+      "price_per_gpu_hour_eur": 1.3068,
+      "note": "bare metal excl. extern IP (Luxembourg-2)"
+    }
+  ]
+}
