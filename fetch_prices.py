@@ -98,7 +98,7 @@ def fetch_ovhcloud_prices() -> list[dict]:
 
     # Bouw price_map: planCode → EUR/uur (alleen .consumption plans)
     price_map: dict[str, float] = {}
-    for plan in catalog.get("plans", []):
+    for plan in catalog.get("addons", []):
         code = plan.get("planCode", "")
         if not code.endswith(".consumption"):
             continue
