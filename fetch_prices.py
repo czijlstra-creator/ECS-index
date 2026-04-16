@@ -61,6 +61,12 @@ def debug_gcore():
                 for ep in [f"gpu-virtual/{pid}/1/flavors", f"gpu-virtual/{pid}/flavors", "gpu-virtual/flavors", f"gpu-virtual/{pid}/1/clusters"]:
                     r3 = requests.get(f"https://api.gcore.com/cloud/v1/{ep}", headers=headers, timeout=15)
                     print(f"  gpu-virtual /v1/{ep}: {r3.status_code} {r3.text[:150]}")
+                # GPU Cloud v3
+                for proj in data.get("results", [])[:1]:
+                    pid = proj["id"]
+                    for ep4 in [f"gpu/baremetal/{pid}/76/flavors", f"gpu/baremetal/{pid}/76/clusters", f"gpu/baremetal/{pid}/76/"]:
+                        r4 = requests.get(f"https://api.gcore.com/cloud/v3/{ep4}", headers=headers, timeout=15)
+                        print(f"  gpu-v3 /cloud/v3/{ep4}: {r4.status_code} {r4.text[:300]}")
             break
         else:
             print(f"  Response: {r.text[:200]}")
