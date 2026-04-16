@@ -285,7 +285,7 @@ def fetch_verda_prices(client_id: str, client_secret: str) -> list[dict]:
     types_r = requests.get(
         f"{VERDA_BASE_URL}/instance-types",
         headers={"Authorization": f"Bearer {access_token}"},
-        params={"currency": "EUR"},
+        params={"currency": "eur"},
         timeout=15,
     )
     types_r.raise_for_status()
