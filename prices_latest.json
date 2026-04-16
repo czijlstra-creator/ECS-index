@@ -1,6 +1,6 @@
 {
   "date": "2026-04-16",
-  "fetched": "2026-04-16T15:07:46.001546+00:00",
+  "fetched": "2026-04-16T15:17:52.365403+00:00",
   "prices": [
     {
       "provider": "Gcore",
@@ -111,6 +111,56 @@
       "price_per_hour_eur": 23.028,
       "price_per_gpu_hour_eur": 2.8785,
       "note": "zone fr-par-2"
+    },
+    {
+      "provider": "Verda",
+      "gpu_model": "H100",
+      "region": "EU (FI)",
+      "instance_type": "1H100.80S.30V",
+      "gpu_count": 1,
+      "price_per_hour_eur": 1.983,
+      "price_per_gpu_hour_eur": 1.983,
+      "note": "1x H100 SXM5 80GB"
+    },
+    {
+      "provider": "Verda",
+      "gpu_model": "H100",
+      "region": "EU (FI)",
+      "instance_type": "1H100.80S.32V",
+      "gpu_count": 1,
+      "price_per_hour_eur": 1.983,
+      "price_per_gpu_hour_eur": 1.983,
+      "note": "1x H100 SXM5 80GB"
+    },
+    {
+      "provider": "Verda",
+      "gpu_model": "H100",
+      "region": "EU (FI)",
+      "instance_type": "2H100.80S.80V",
+      "gpu_count": 2,
+      "price_per_hour_eur": 3.966,
+      "price_per_gpu_hour_eur": 1.983,
+      "note": "2x H100 SXM5 80GB"
+    },
+    {
+      "provider": "Verda",
+      "gpu_model": "H100",
+      "region": "EU (FI)",
+      "instance_type": "4H100.80S.176V",
+      "gpu_count": 4,
+      "price_per_hour_eur": 7.932,
+      "price_per_gpu_hour_eur": 1.983,
+      "note": "4x H100 SXM5 80GB"
+    },
+    {
+      "provider": "Verda",
+      "gpu_model": "H100",
+      "region": "EU (FI)",
+      "instance_type": "8H100.80S.176V",
+      "gpu_count": 8,
+      "price_per_hour_eur": 15.86,
+      "price_per_gpu_hour_eur": 1.9825,
+      "note": "8x H100 SXM5 80GB"
     }
   ]
 }
