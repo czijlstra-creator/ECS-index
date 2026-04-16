@@ -35,6 +35,6 @@ jobs:
         run: |
           git config user.name "ECS Bot"
           git config user.email "bot@kallas.group"
-          git add prices.json ECS_prices.js
+          git add prices.json
           git diff --staged --quiet || git commit -m "Dagelijkse prijsupdate $(date +%Y-%m-%d)"
           git push
