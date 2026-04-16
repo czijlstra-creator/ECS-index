@@ -307,29 +307,23 @@ def main():
             errors.append({"provider": name, "error": str(e)})
             print(f"✗ {name:20s}  FOUT: {e}")
 
-    print()
+    index_value = compute_index(results) if results else None
 
-    if results:
-        index_value = compute_index(results)
-        eur_only = [r for r in results if r["api_currency"] == "EUR"]
-        print(f"ECS H100-EU Index (gewogen):  {index_value:.4f}")
-        if len(eur_only) < len(results):
-            non_eur = [r["provider"] for r in results if r["api_currency"] != "EUR"]
-            print(f"⚠ Let op: {', '.join(non_eur)} retourneert USD via API.")
-            print(f"  Zie CURRENCY_NOTE in de code — bevestig vaste EUR-contractprijs.")
+    if index_value:
+        print(f"\nECS H100-EU Index (gewogen):  {index_value:.4f}")
 
-    if errors:
-        print(f"\n{len(errors)} aanbieder(s) niet bereikbaar: {[e['provider'] for e in errors]}")
-
-    # Output als JSON voor de pipeline
     output = {
-        "date":        today,
-        "index":       compute_index(results) if results else None,
-        "providers":   results,
-        "errors":      errors,
+        "date":      today,
+        "index":     index_value,
+        "providers": results,
+        "errors":    errors,
     }
-    print("\nJSON output:")
-    print(json.dumps(output, indent=2))
+
+    # Schrijf naar prices.json
+    with open("prices.json", "w") as f:
+        json.dump(output, f, indent=2)
+    print("\nprices.json opgeslagen.")
+
     return output
 
 
