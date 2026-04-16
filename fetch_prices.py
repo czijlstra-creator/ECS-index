@@ -34,19 +34,27 @@ def debug_gcore():
         if r.status_code == 200:
             data = r.json()
             print(f"  Response: {json.dumps(data)[:300]}")
+            # Regio's ophalen
+            r_reg = requests.get("https://api.gcore.com/cloud/v1/regions", headers=headers, timeout=15)
+            all_regions = r_reg.json().get("results", [{"id": 76}, {"id": 9}]) if r_reg.status_code == 200 else [{"id": 76}, {"id": 9}]
+            print(f"  Regio's: {[(r['id'], r.get('display_name','?')) for r in all_regions]}")
             # Probeer flavors voor elk project
             for proj in data.get("results", [])[:2]:
                 pid = proj["id"]
-                r2 = requests.get(
-                    f"https://api.gcore.com/cloud/v1/flavors/{pid}/1",
-                    headers=headers, timeout=15)
-                print(f"  /flavors/{pid}/1 → status {r2.status_code}")
-                if r2.status_code == 200:
-                    flavors = r2.json().get("results", [])
-                    gpu_flavors = [f["name"] for f in flavors if "gpu" in f.get("name","").lower() or "h100" in f.get("name","").lower() or "a100" in f.get("name","").lower()]
-                    print(f"  GPU flavors gevonden: {gpu_flavors[:10]}")
-                    if not gpu_flavors:
-                        print(f"  Eerste 5 flavors: {[f['name'] for f in flavors[:5]]}")
+                for reg in all_regions:
+                    rid = reg.get("id")
+                    r2 = requests.get(
+                        f"https://api.gcore.com/cloud/v1/flavors/{pid}/{rid}",
+                        headers=headers, timeout=15)
+                    if r2.status_code == 200:
+                        flavors = r2.json().get("results", [])
+                        gpu = [f["name"] for f in flavors if any(k in f.get("name","").lower() for k in ["gpu","h100","a100"])]
+                        if gpu:
+                            print(f"  Regio {rid}: GPU: {gpu[:5]}")
+                        else:
+                            print(f"  Regio {rid}: geen GPU ({len(flavors)} flavors)")
+                    else:
+                        print(f"  Regio {rid}: {r2.status_code}")
             break
         else:
             print(f"  Response: {r.text[:200]}")
@@ -82,6 +90,11 @@ def debug_ovh():
                 if any(k in (acode + aname).lower() for k in ["gpu", "h100", "a100"]):
                     gpu_items.append({"planCode": acode, "name": aname})
 
+        for a in catalog.get("addons", []):
+            code = a.get("planCode", "")
+            name = a.get("invoiceName", "")
+            if any(k in (code + name).lower() for k in ["gpu", "h100", "a100"]):
+                gpu_items.append({"planCode": code, "name": name})
         print(f"GPU-gerelateerde items ({len(gpu_items)}):")
         for item in gpu_items[:20]:
             print(f"  {item}")
