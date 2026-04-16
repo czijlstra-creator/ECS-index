@@ -1,0 +1,40 @@
+name: ECS dagelijkse prijsupdate
+
+on:
+  schedule:
+    - cron: '0 15 * * 1-5'   # 15:00 UTC = 17:00 CET, werkdagen
+  workflow_dispatch:           # ook handmatig te triggeren via GitHub UI
+
+jobs:
+  fetch-prices:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Python instellen
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Dependencies installeren
+        run: pip install requests
+
+      - name: Prijzen ophalen
+        env:
+          GCORE_API_KEY:       ${{ secrets.GCORE_API_KEY }}
+          OVH_APP_KEY:         ${{ secrets.OVH_APP_KEY }}
+          OVH_APP_SECRET:      ${{ secrets.OVH_APP_SECRET }}
+          OVH_CONSUMER_KEY:    ${{ secrets.OVH_CONSUMER_KEY }}
+          VERDA_CLIENT_ID:     ${{ secrets.VERDA_CLIENT_ID }}
+          VERDA_CLIENT_SECRET: ${{ secrets.VERDA_CLIENT_SECRET }}
+        run: python fetch_prices.py
+
+      - name: Wijzigingen committen
+        run: |
+          git config user.name "ECS Bot"
+          git config user.email "bot@kallas.group"
+          git add prices.json ECS_prices.js
+          git diff --staged --quiet || git commit -m "Dagelijkse prijsupdate $(date +%Y-%m-%d)"
+          git push
