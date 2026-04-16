@@ -98,7 +98,7 @@ def debug_gcore():
                     r8 = requests.get(f"https://api.gcore.com/cloud/v3/{ep8}", headers=headers, timeout=15)
                     print(f"  pricing-v3 /cloud/v3/{ep8}: {r8.status_code} {r8.text[:500]}")
                 # Try POST to /cloud/v1/pricing/ai/clusters (GET=405 -> path exists, POST may work)
-                post_body = {"flavor_name": "bm3-infrastructure-ai-large-l40s-48-8", "nodes_count": 1}
+                post_body = {"name": "price-check", "flavor": "bm3-infrastructure-ai-large-l40s-48-8", "interfaces": [{"type": "external"}]}
                 r_post = requests.post(
                     "https://api.gcore.com/cloud/v1/pricing/1186222/76/ai/clusters",
                     headers={**headers, "Content-Type": "application/json"},
