@@ -5,7 +5,10 @@ on:
     - cron: '0 15 * * 1-5'   # 15:00 UTC = 17:00 CET, werkdagen
   workflow_dispatch:           # ook handmatig te triggeren via GitHub UI
 
-jobs:
+permissions:
+  contents: write
+  
+  jobs:
   fetch-prices:
     runs-on: ubuntu-latest
 
