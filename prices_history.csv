@@ -15,3 +15,14 @@ date,provider,gpu_model,region,instance_type,gpu_count,price_per_hour_eur,price_
 2026-04-16,Scaleway,H100 SXM,EU (AMS/PAR),H100-SXM-2-80G,2,6.018,3.009,zone fr-par-2
 2026-04-16,Scaleway,H100 SXM,EU (AMS/PAR),H100-SXM-4-80G,4,11.61,2.9025,zone fr-par-2
 2026-04-16,Scaleway,H100 SXM,EU (AMS/PAR),H100-SXM-8-80G,8,23.028,2.8785,zone fr-par-2
+2026-04-16,Gcore,L40S,Luxembourg-2 (EU),bm3-infrastructure-ai-large-l40s-48-8,8,10.4544,1.3068,bare metal excl. extern IP (Luxembourg-2)
+2026-04-16,OVHcloud,H100 SXM,EU (FR),h100-380.consumption,4,2.8,0.7,H100 SXM 4-GPU bare metal
+2026-04-16,OVHcloud,H100 SXM,EU (FR),h100-760.consumption,8,5.6,0.7,H100 SXM 8-GPU bare metal
+2026-04-16,OVHcloud,H100 SXM,EU (FR),h100-1520.consumption,16,11.2,0.7,H100 SXM 16-GPU bare metal
+2026-04-16,Scaleway,H100 SXM,EU (AMS/PAR),H100-1-80G,1,2.73,2.73,zone fr-par-2
+2026-04-16,Scaleway,H100 SXM,EU (AMS/PAR),H100-1-M,1,4.2,4.2,zone fr-par-2
+2026-04-16,Scaleway,H100 SXM,EU (AMS/PAR),H100-2-80G,2,5.46,2.73,zone fr-par-2
+2026-04-16,Scaleway,H100 SXM,EU (AMS/PAR),H100-2-M,2,8.4,4.2,zone fr-par-2
+2026-04-16,Scaleway,H100 SXM,EU (AMS/PAR),H100-SXM-2-80G,2,6.018,3.009,zone fr-par-2
+2026-04-16,Scaleway,H100 SXM,EU (AMS/PAR),H100-SXM-4-80G,4,11.61,2.9025,zone fr-par-2
+2026-04-16,Scaleway,H100 SXM,EU (AMS/PAR),H100-SXM-8-80G,8,23.028,2.8785,zone fr-par-2
