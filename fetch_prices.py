@@ -67,6 +67,19 @@ def debug_gcore():
                     for ep4 in [f"gpu/baremetal/{pid}/76/flavors", f"gpu/baremetal/{pid}/76/clusters", f"gpu/baremetal/{pid}/76/"]:
                         r4 = requests.get(f"https://api.gcore.com/cloud/v3/{ep4}", headers=headers, timeout=15)
                         print(f"  gpu-v3 /cloud/v3/{ep4}: {r4.status_code} {r4.text[:2000]}")
+                # GPU Cloud v3 — pricing discovery
+                flavor_name = "bm3-infrastructure-ai-large-l40s-48-8"
+                for ep5 in [
+                    f"gpu/baremetal/{pid}/76/prices",
+                    f"gpu/baremetal/{pid}/76/flavors/{flavor_name}",
+                    f"gpu/baremetal/{pid}/76/flavor-prices",
+                    f"gpu/{pid}/76/prices",
+                ]:
+                    r5 = requests.get(f"https://api.gcore.com/cloud/v3/{ep5}", headers=headers, timeout=15)
+                    print(f"  price-v3 /cloud/v3/{ep5}: {r5.status_code} {r5.text[:500]}")
+                for ep6 in [f"gpu-baremetal/{pid}/76/prices", f"baremetal/{pid}/76/prices", f"prices/{pid}/76"]:
+                    r6 = requests.get(f"https://api.gcore.com/cloud/v1/{ep6}", headers=headers, timeout=15)
+                    print(f"  price-v1 /cloud/v1/{ep6}: {r6.status_code} {r6.text[:500]}")
             break
         else:
             print(f"  Response: {r.text[:200]}")
