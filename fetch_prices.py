@@ -25,6 +25,9 @@ _GCORE_GPUS = [
     ("H200", "bm3-ai-1xlarge-h200-141-8",             8, (2.00, 6.00)),
 ]
 
+OVH_SUBSIDIARY = "FR"  # EUR-prijzen
+OVH_REGION = "EU (FR)"
+
 # OVH H100 bare-metal plans: planCode → (gpu_count, label)
 # Naamgeving: h100-{geheugen_GB}; ratio 380:760:1520 = 1:2:4 → vermoedelijk 4/8/16x H100 SXM 80GB
 OVH_H100_PLANS = {
