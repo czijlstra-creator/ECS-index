@@ -15,13 +15,15 @@ from datetime import date, datetime, timezone
 
 GCORE_PROJECT_ID = 1186222
 GCORE_REGION_ID = 76  # Luxembourg-2
-GCORE_FLAVOR = "bm3-infrastructure-ai-large-l40s-48-8"
-GCORE_GPU_COUNT = 8  # 8x NVIDIA L40S per server
-GCORE_GPU_MODEL = "L40S"
 GCORE_REGION = "Luxembourg-2 (EU)"
 
-OVH_SUBSIDIARY = "FR"  # EUR-prijzen
-OVH_REGION = "EU (FR)"
+# Gcore bare-metal AI flavors — EUR-native via Gcore cloud-API
+# (gpu_model, flavor_slug, gpu_count_per_node, sanity_range_eur)
+_GCORE_GPUS = [
+    ("L40S", "bm3-infrastructure-ai-large-l40s-48-8", 8, (0.80, 3.00)),
+    ("H100", "bm3-ai-1xlarge-h100-80-8",              8, (1.50, 5.00)),
+    ("H200", "bm3-ai-1xlarge-h200-141-8",             8, (2.00, 6.00)),
+]
 
 # OVH H100 bare-metal plans: planCode → (gpu_count, label)
 # Naamgeving: h100-{geheugen_GB}; ratio 380:760:1520 = 1:2:4 → vermoedelijk 4/8/16x H100 SXM 80GB
@@ -51,16 +53,24 @@ _VERDA_GPUS = [
     ("B200", (2.00, 8.00)),
 ]
 
-# Nebius (public docs parsing — geen API-key nodig)
+# Nebius (public docs parsing - geen API-key nodig)
+# B200 bewust uitgesloten: Nebius biedt B200 alleen in us-central1 en me-west1,
+# geen EU-regio. Valt buiten de EU-scope van ECS.
+# Sinds 1 oktober 2025 toont de pricing-pagina zowel de oude split-tabel
+# (GPU/CPU/RAM apart) als de nieuwe unified-tabel. De regex gebruikt een
+# negatieve lookahead op ". GPU"/". CPU"/". RAM" om alleen de unified-rij
+# te matchen, niet de oude split-waarden.
 NEBIUS_PRICING_URL = "https://docs.nebius.com/compute/resources/pricing/"
 FRANKFURTER_URL = "https://api.frankfurter.app/latest"
 
 _NEBIUS_GPUS = [
     ("H100 NVL",
-     r"(?<!Preemptible\s)NVIDIA[^$<]*?H100 NVLink with Intel Sapphire Rapids[^$<]*?\$(\d+\.\d+)[^1]*?1\s*GPU\s*hour",
+     r"(?<!Preemptible\s)NVIDIA[^$<]*?H100 NVLink with Intel Sapphire Rapids"
+     r"(?!\.\s*(?:GPU|CPU|RAM))[^$<]*?\$(\d+\.\d+)[^1]*?1\s*GPU\s*hour",
      "EU (FI, eu-north1)", (1.50, 5.00)),
     ("H200 NVL",
-     r"(?<!Preemptible\s)NVIDIA[^$<]*?H200 NVLink with Intel Sapphire Rapids[^$<]*?\$(\d+\.\d+)[^1]*?1\s*GPU\s*hour",
+     r"(?<!Preemptible\s)NVIDIA[^$<]*?H200 NVLink with Intel Sapphire Rapids"
+     r"(?!\.\s*(?:GPU|CPU|RAM))[^$<]*?\$(\d+\.\d+)[^1]*?1\s*GPU\s*hour",
      "EU (FI/FR, eu-north1/eu-west1)", (2.00, 6.00)),
 ]
 
@@ -86,6 +96,14 @@ GENESIS_REGION_MAP = {
     "H200": "EU (FR/ES/FI)",
     "B200": "EU (NO)",
 }
+
+# Per-GPU regex overrides voor Genesis Cloud productpagina's
+# Default patroon pakt H100 en B200; H200 heeft "Available" tussen /h en On-Demand
+_GENESIS_PATTERNS = {
+    "default": r"\$\s*(\d+\.\d+)\s*/h\s+On-demand",
+    "H200":    r"\$\s*(\d+\.\d+)\s*/h\s+Available\s+On-Demand",
+}
+
 _GENESIS_SANITY = {
     "H100": (1.50, 5.00),
     "H200": (2.00, 6.00),
@@ -103,41 +121,54 @@ CSV_FIELDS = [
 # ── Gcore ─────────────────────────────────────────────────────────────────────
 
 def fetch_gcore_prices(api_key: str) -> list[dict]:
-    """
-    Haalt de L40S bare-metal prijs op via:
-    POST /cloud/v1/pricing/{project_id}/{region_id}/ai/clusters
-    Geeft de flavor-prijs excl. externe IP terug.
-    """
-    url = (
-        f"https://api.gcore.com/cloud/v1/pricing/"
-        f"{GCORE_PROJECT_ID}/{GCORE_REGION_ID}/ai/clusters"
+    """Haal on-demand per-uur prijzen op voor Gcore bare-metal GPU-flavors."""
+    results = []
+    headers = {"Authorization": f"APIKey {api_key}"}
+    base_url = (
+        f"https://api.gcore.com/cloud/v1/prices/bmflavors/"
+        f"{GCORE_PROJECT_ID}/{GCORE_REGION_ID}"
     )
-    r = requests.post(
-        url,
-        headers={
-            "Authorization": f"APIKey {api_key}",
-            "Content-Type": "application/json",
-        },
-        json={
-            "name": "price-check",
-            "flavor": GCORE_FLAVOR,
-            "interfaces": [{"type": "external"}],
-        },
-        timeout=15,
-    )
-    r.raise_for_status()
-    data = r.json()
-    price = data["per_hour"]["flavor"]  # EUR/uur excl. extern IP
-    return [{
-        "provider": "Gcore",
-        "gpu_model": GCORE_GPU_MODEL,
-        "region": GCORE_REGION,
-        "instance_type": GCORE_FLAVOR,
-        "gpu_count": GCORE_GPU_COUNT,
-        "price_per_hour_eur": round(price, 4),
-        "price_per_gpu_hour_eur": round(price / GCORE_GPU_COUNT, 4),
-        "note": "bare metal excl. extern IP (Luxembourg-2)",
-    }]
+
+    try:
+        resp = requests.get(base_url, headers=headers, timeout=30)
+        resp.raise_for_status()
+        items = resp.json().get("results", [])
+    except Exception as e:
+        print(f"[Gcore] API-fout: {e}")
+        return results
+
+    for gpu_model, flavor_slug, gpu_count, (lo, hi) in _GCORE_GPUS:
+        flavor = next(
+            (it for it in items if it.get("flavor_name") == flavor_slug),
+            None,
+        )
+        if not flavor:
+            print(f"[Gcore] flavor niet in response: {flavor_slug}")
+            continue
+
+        price_per_node_hour = float(flavor.get("price_per_hour", 0.0))
+        price_per_gpu_hour = price_per_node_hour / gpu_count
+
+        if not (lo <= price_per_gpu_hour <= hi):
+            print(
+                f"[Gcore] sanity fail {gpu_model}: "
+                f"{price_per_gpu_hour:.4f} EUR buiten {lo}-{hi}"
+            )
+            continue
+
+        results.append({
+            "date": date.today().isoformat(),
+            "provider": "Gcore",
+            "gpu_model": gpu_model,
+            "region": GCORE_REGION,
+            "instance_type": flavor_slug,
+            "gpu_count": gpu_count,
+            "price_per_hour_eur": round(price_per_node_hour, 4),
+            "price_per_gpu_hour_eur": round(price_per_gpu_hour, 4),
+            "note": "Gcore bare-metal cloud-API",
+        })
+
+    return results
 
 
 # ── OVHcloud ──────────────────────────────────────────────────────────────────
@@ -475,7 +506,8 @@ def fetch_coreweave_prices() -> list[dict]:
 def fetch_genesiscloud_prices() -> list[dict]:
     """
     Parseert de on-demand prijs per GPU op elke Genesis Cloud product-pagina
-    (H100 / H200 / B200). Pattern: '$ X.XX/h On-demand'.
+    (H100 / H200 / B200). Pattern wordt per GPU gekozen via _GENESIS_PATTERNS,
+    omdat de H200-pagina een afwijkende hero-opmaak heeft.
     EU-datacenters per GPU zijn vastgelegd in GENESIS_REGION_MAP.
     """
     import re
@@ -490,14 +522,15 @@ def fetch_genesiscloud_prices() -> list[dict]:
             continue
         text = re.sub(r"<[^>]+>", " ", r.text)
         text = re.sub(r"\s+", " ", text)
-        m = re.search(r"\$\s*(\d+\.\d+)\s*/h\s+On-demand", text)
+        pattern = _GENESIS_PATTERNS.get(gpu_label, _GENESIS_PATTERNS["default"])
+        m = re.search(pattern, text, re.IGNORECASE)
         if not m:
-            print(f"  WAARSCHUWING: Genesis Cloud {gpu_label} on-demand prijs niet gevonden — layout gewijzigd?")
+            print(f"  WAARSCHUWING: Genesis Cloud {gpu_label} on-demand prijs niet gevonden - layout gewijzigd?")
             continue
         price_usd = float(m.group(1))
         lo, hi = _GENESIS_SANITY[gpu_label]
         if not (lo <= price_usd <= hi):
-            print(f"  WAARSCHUWING: Genesis Cloud {gpu_label} prijs ${price_usd} buiten sanity-range — overgeslagen")
+            print(f"  WAARSCHUWING: Genesis Cloud {gpu_label} prijs ${price_usd} buiten sanity-range - overgeslagen")
             continue
         price_eur = price_usd * fx
         records.append({
