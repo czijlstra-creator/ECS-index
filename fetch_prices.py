@@ -122,11 +122,13 @@ CSV_FIELDS = [
 
 
 # ── Gcore ─────────────────────────────────────────────────────────────────────
-
 def fetch_gcore_prices(api_key: str) -> list[dict]:
     results = []
     headers = {"Authorization": f"APIKey {api_key}"}
-    url = "https://api.gcore.com/cloud/v1/prices"
+    url = (
+        f"https://api.gcore.com/cloud/v1/bmflavors/"
+        f"{GCORE_PROJECT_ID}/{GCORE_REGION_ID}?include_prices=true"
+    )
     try:
         resp = requests.get(url, headers=headers, timeout=30)
         resp.raise_for_status()
@@ -139,12 +141,11 @@ def fetch_gcore_prices(api_key: str) -> list[dict]:
         print(f"  WAARSCHUWING: Gcore response geen JSON - eerste 300 chars: {resp.text[:300]}")
         return results
 
-    # Diagnostic: laat zien wat Gcore teruggeeft
     if isinstance(data, dict):
         print(f"  [Gcore] top-level keys: {sorted(data.keys())}")
         items = (
             data.get("results")
-            or data.get("prices")
+            or data.get("flavors")
             or data.get("data")
             or data.get("items")
             or []
@@ -161,6 +162,17 @@ def fetch_gcore_prices(api_key: str) -> list[dict]:
     first = items[0] if isinstance(items[0], dict) else {}
     print(f"  [Gcore] aantal items: {len(items)}, voorbeeld-keys: {sorted(first.keys())}")
 
+    # Dump alle GPU-flavor-namen — zo zien we of onze slugs nog kloppen
+    all_names = [
+        it.get("flavor_name") or it.get("name")
+        for it in items if isinstance(it, dict)
+    ]
+    gpu_names = [
+        n for n in all_names
+        if n and any(g in n.lower() for g in ("h100", "h200", "l40s", "b200", "gb200"))
+    ]
+    print(f"  [Gcore] GPU-flavors beschikbaar: {gpu_names}")
+
     for gpu_model, flavor_slug, gpu_count, (lo, hi) in _GCORE_GPUS:
         item = next(
             (
@@ -176,9 +188,8 @@ def fetch_gcore_prices(api_key: str) -> list[dict]:
             print(f"  WAARSCHUWING: Gcore flavor niet gevonden: {flavor_slug}")
             continue
 
-        # Flexibele prijsveld-matching
         price_raw = None
-        for field in ("price_per_hour", "hourly_price", "price_per_unit", "price", "rate", "value", "amount"):
+        for field in ("price_per_hour", "hourly_price", "price_per_unit", "price", "rate"):
             v = item.get(field)
             if v is None:
                 continue
@@ -188,6 +199,9 @@ def fetch_gcore_prices(api_key: str) -> list[dict]:
                 price_raw = v
             if price_raw is not None:
                 break
+        if price_raw is None and isinstance(item.get("price_status"), dict):
+            ps = item["price_status"]
+            price_raw = ps.get("price_per_hour") or ps.get("hourly_price") or ps.get("value")
 
         try:
             price_per_node_hour = float(price_raw) if price_raw is not None else 0.0
@@ -215,7 +229,7 @@ def fetch_gcore_prices(api_key: str) -> list[dict]:
             "gpu_count": gpu_count,
             "price_per_hour_eur": round(price_per_node_hour, 4),
             "price_per_gpu_hour_eur": round(price_per_gpu_hour, 4),
-            "note": "Gcore cloud-API",
+            "note": "Gcore bare-metal cloud-API",
         })
     return results
 
