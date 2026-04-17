@@ -124,77 +124,82 @@ CSV_FIELDS = [
 # ── Gcore ─────────────────────────────────────────────────────────────────────
 
 def fetch_gcore_prices(api_key: str) -> list[dict]:
-    """
-    Haalt on-demand per-uur prijzen op voor Gcore bare-metal GPU-flavors.
-    Itereert over _GCORE_GPUS en matcht op flavor_slug.
-    Heeft defensieve field-matching zodat we ook werken als Gcore hun
-    response-veldnamen licht wijzigt. Print diagnostiek bij mismatch.
-    """
     results = []
     headers = {"Authorization": f"APIKey {api_key}"}
-    url = (
-        f"https://api.gcore.com/cloud/v1/pricing/bmflavors/"
-        f"{GCORE_PROJECT_ID}/{GCORE_REGION_ID}"
-    )
-
+    url = "https://api.gcore.com/cloud/v1/prices"
     try:
         resp = requests.get(url, headers=headers, timeout=30)
         resp.raise_for_status()
     except Exception as e:
         print(f"  WAARSCHUWING: Gcore HTTP-fout {url}: {e}")
         return results
-
     try:
         data = resp.json()
     except ValueError:
-        print(f"  WAARSCHUWING: Gcore response is geen JSON - eerste 200 chars: {resp.text[:200]}")
+        print(f"  WAARSCHUWING: Gcore response geen JSON - eerste 300 chars: {resp.text[:300]}")
         return results
 
-    items = data.get("results") if isinstance(data, dict) else data
+    # Diagnostic: laat zien wat Gcore teruggeeft
+    if isinstance(data, dict):
+        print(f"  [Gcore] top-level keys: {sorted(data.keys())}")
+        items = (
+            data.get("results")
+            or data.get("prices")
+            or data.get("data")
+            or data.get("items")
+            or []
+        )
+    elif isinstance(data, list):
+        items = data
+    else:
+        items = []
+
     if not items:
-        keys = list(data.keys()) if isinstance(data, dict) else "niet-dict"
-        print(f"  WAARSCHUWING: Gcore lege response - top-level keys: {keys}")
+        print(f"  WAARSCHUWING: Gcore lege items-lijst")
         return results
 
-    # Eenmalige diagnose: welke velden retourneert Gcore?
-    sample = items[0] if isinstance(items[0], dict) else {}
-    print(f"  [Gcore] voorbeeld-item keys: {sorted(sample.keys())}")
+    first = items[0] if isinstance(items[0], dict) else {}
+    print(f"  [Gcore] aantal items: {len(items)}, voorbeeld-keys: {sorted(first.keys())}")
 
     for gpu_model, flavor_slug, gpu_count, (lo, hi) in _GCORE_GPUS:
-        # Match op verschillende veldnamen voor flavor-identifier
-        flavor = next(
+        item = next(
             (
                 it for it in items
-                if it.get("flavor_name") == flavor_slug
-                or it.get("name") == flavor_slug
-                or it.get("flavor") == flavor_slug
+                if isinstance(it, dict) and any(
+                    it.get(k) == flavor_slug
+                    for k in ("flavor_name", "name", "flavor", "sku", "slug")
+                )
             ),
             None,
         )
-        if not flavor:
+        if not item:
             print(f"  WAARSCHUWING: Gcore flavor niet gevonden: {flavor_slug}")
             continue
 
-        # Probeer verschillende veldnamen voor prijs
-        price_raw = flavor.get("price_per_hour")
-        if price_raw is None:
-            price_raw = flavor.get("hourly_price")
-        if price_raw is None:
-            price_field = flavor.get("price")
-            price_raw = price_field.get("value") if isinstance(price_field, dict) else price_field
+        # Flexibele prijsveld-matching
+        price_raw = None
+        for field in ("price_per_hour", "hourly_price", "price_per_unit", "price", "rate", "value", "amount"):
+            v = item.get(field)
+            if v is None:
+                continue
+            if isinstance(v, dict):
+                price_raw = v.get("value") or v.get("amount") or v.get("price")
+            else:
+                price_raw = v
+            if price_raw is not None:
+                break
 
         try:
             price_per_node_hour = float(price_raw) if price_raw is not None else 0.0
         except (TypeError, ValueError):
-            print(f"  WAARSCHUWING: Gcore prijs niet parsebaar voor {flavor_slug}: {price_raw}")
+            print(f"  WAARSCHUWING: Gcore prijs niet parsebaar voor {flavor_slug}: {price_raw} (keys: {sorted(item.keys())})")
             continue
 
         if price_per_node_hour == 0.0:
-            print(f"  WAARSCHUWING: Gcore prijs 0.00 voor {flavor_slug} - item keys: {sorted(flavor.keys())}")
+            print(f"  WAARSCHUWING: Gcore prijs 0.00 voor {flavor_slug} - item keys: {sorted(item.keys())}")
             continue
 
         price_per_gpu_hour = price_per_node_hour / gpu_count
-
         if not (lo <= price_per_gpu_hour <= hi):
             print(
                 f"  WAARSCHUWING: Gcore {gpu_model} €{price_per_gpu_hour:.4f}/GPU/hr "
@@ -210,10 +215,10 @@ def fetch_gcore_prices(api_key: str) -> list[dict]:
             "gpu_count": gpu_count,
             "price_per_hour_eur": round(price_per_node_hour, 4),
             "price_per_gpu_hour_eur": round(price_per_gpu_hour, 4),
-            "note": "Gcore bare-metal cloud-API",
+            "note": "Gcore cloud-API",
         })
-
     return results
+
 # ── OVHcloud ──────────────────────────────────────────────────────────────────
 
 def fetch_ovhcloud_prices() -> list[dict]:
