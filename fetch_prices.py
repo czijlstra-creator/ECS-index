@@ -46,6 +46,47 @@ VERDA_BASE_URL = "https://api.datacrunch.io/v1"
 VERDA_REGION = "EU (FI)"  # Helsinki, Finland
 VERDA_GPU_FILTER = "H100"  # filter op GPU-model
 
+# Nebius (public docs parsing — geen API-key nodig)
+NEBIUS_PRICING_URL = "https://docs.nebius.com/compute/resources/pricing/"
+FRANKFURTER_URL = "https://api.frankfurter.app/latest"
+
+_NEBIUS_GPUS = [
+    ("H100 NVL",
+     r"(?<!Preemptible\s)NVIDIA[^$<]*?H100 NVLink with Intel Sapphire Rapids[^$<]*?\$(\d+\.\d+)[^1]*?1\s*GPU\s*hour",
+     "EU (FI, eu-north1)", (1.50, 5.00)),
+    ("H200 NVL",
+     r"(?<!Preemptible\s)NVIDIA[^$<]*?H200 NVLink with Intel Sapphire Rapids[^$<]*?\$(\d+\.\d+)[^1]*?1\s*GPU\s*hour",
+     "EU (FI/FR, eu-north1/eu-west1)", (2.00, 6.00)),
+]
+
+# CoreWeave (public pricing-pagina; EU-sectie)
+COREWEAVE_PRICING_URL = "https://www.coreweave.com/pricing"
+COREWEAVE_REGION = "EU (NL/NO)"
+
+_COREWEAVE_GPUS = [
+    # (label, regex binnen EU-sectie, gpu_count per node, sanity range USD)
+    ("H100", r"NVIDIA HGX H100 On-Demand Price:\s*\$(\d+\.\d+)",  8, (30.00, 80.00)),
+    ("H200", r"NVIDIA HGX H200 On-Demand Price:\s*\$(\d+\.\d+)",  8, (30.00, 90.00)),
+    ("B200", r"NVIDIA HGX B200 On-Demand Price:\s*\$(\d+\.\d+)",  8, (40.00, 120.00)),
+]
+
+# Genesis Cloud (per-GPU product-pagina's; on-demand tarief)
+GENESIS_PRODUCT_PAGES = {
+    "H100": "https://www.genesiscloud.com/products/nvidia-hgx-h100",
+    "H200": "https://www.genesiscloud.com/products/nvidia-hgx-h200",
+    "B200": "https://www.genesiscloud.com/products/nvidia-hgx-b200",
+}
+GENESIS_REGION_MAP = {
+    "H100": "EU (NO/FR/ES/FI)",
+    "H200": "EU (FR/ES/FI)",
+    "B200": "EU (NO)",
+}
+_GENESIS_SANITY = {
+    "H100": (1.50, 5.00),
+    "H200": (2.00, 6.00),
+    "B200": (2.50, 8.00),
+}
+
 CSV_FILE = "prices_history.csv"
 JSON_FILE = "prices_latest.json"
 CSV_FIELDS = [
@@ -315,6 +356,144 @@ def fetch_verda_prices(client_id: str, client_secret: str) -> list[dict]:
         })
     return records
 
+# ── Shared helper: USD → EUR via ECB dagreferentie ───────────────────────────
+
+def _usd_to_eur_rate() -> float:
+    r = requests.get(f"{FRANKFURTER_URL}?from=USD&to=EUR", timeout=10)
+    r.raise_for_status()
+    rate = r.json()["rates"]["EUR"]
+    if not (0.70 < rate < 1.30):
+        raise ValueError(f"ECB USD->EUR koers buiten sanity-range: {rate}")
+    return rate
+
+
+# ── Nebius (docs-parsing) ────────────────────────────────────────────────────
+
+def fetch_nebius_prices() -> list[dict]:
+    """
+    Parseert de officiële Nebius pricing docs-pagina.
+    Elke dagelijkse run haalt de actuele rate card op — prijswijzigingen
+    bij Nebius rollen binnen 6 uur door naar de index.
+    """
+    import re
+    r = requests.get(NEBIUS_PRICING_URL, timeout=20)
+    r.raise_for_status()
+    text = re.sub(r"<[^>]+>", " ", r.text)
+    text = re.sub(r"\s+", " ", text)
+    fx = _usd_to_eur_rate()
+    records = []
+    for gpu_label, pattern, region, (lo, hi) in _NEBIUS_GPUS:
+        m = re.search(pattern, text)
+        if not m:
+            print(f"  WAARSCHUWING: Nebius {gpu_label} niet gevonden in docs — layout gewijzigd?")
+            continue
+        price_usd = float(m.group(1))
+        if not (lo <= price_usd <= hi):
+            print(f"  WAARSCHUWING: Nebius {gpu_label} prijs ${price_usd} buiten sanity-range — overgeslagen")
+            continue
+        price_eur = price_usd * fx
+        records.append({
+            "provider": "Nebius",
+            "gpu_model": gpu_label,
+            "region": region,
+            "instance_type": f"{gpu_label.lower().replace(' ', '-')}-1gpu",
+            "gpu_count": 1,
+            "price_per_hour_eur": round(price_eur, 4),
+            "price_per_gpu_hour_eur": round(price_eur, 4),
+            "note": f"on-demand, ${price_usd}/GPU/hr x ECB {fx:.4f}",
+        })
+    return records
+
+
+# ── CoreWeave (docs-parsing; EU-regio) ───────────────────────────────────────
+
+def fetch_coreweave_prices() -> list[dict]:
+    """
+    Parseert CoreWeave's officiële pricing-pagina. Isoleert eerst de
+    'REGION: EUROPE' sectie en zoekt daarbinnen de H100/H200/B200 node-prijzen.
+    Price quotes zijn voor de 8-GPU node — afgeleid per GPU-hour.
+    """
+    import re
+    r = requests.get(COREWEAVE_PRICING_URL, timeout=20)
+    r.raise_for_status()
+    text = re.sub(r"<[^>]+>", " ", r.text)
+    text = re.sub(r"\s+", " ", text)
+
+    eu_match = re.search(
+        r"REGION:\s*EUROPE(.*?)(?:On-demand CPU instances|Reserved capacity)",
+        text, re.IGNORECASE,
+    )
+    if not eu_match:
+        print("  WAARSCHUWING: CoreWeave EU-sectie niet gevonden — layout gewijzigd?")
+        return []
+    eu_text = eu_match.group(1)
+
+    fx = _usd_to_eur_rate()
+    records = []
+    for gpu_label, pattern, gpu_count, (lo, hi) in _COREWEAVE_GPUS:
+        m = re.search(pattern, eu_text)
+        if not m:
+            print(f"  WAARSCHUWING: CoreWeave {gpu_label} EU-prijs niet gevonden — layout gewijzigd?")
+            continue
+        node_usd = float(m.group(1))
+        if not (lo <= node_usd <= hi):
+            print(f"  WAARSCHUWING: CoreWeave {gpu_label} nodeprijs ${node_usd} buiten sanity-range — overgeslagen")
+            continue
+        node_eur = node_usd * fx
+        records.append({
+            "provider": "CoreWeave",
+            "gpu_model": gpu_label,
+            "region": COREWEAVE_REGION,
+            "instance_type": f"hgx-{gpu_label.lower()}-{gpu_count}gpu",
+            "gpu_count": gpu_count,
+            "price_per_hour_eur": round(node_eur, 4),
+            "price_per_gpu_hour_eur": round(node_eur / gpu_count, 4),
+            "note": f"on-demand 8-GPU node, ${node_usd}/node x ECB {fx:.4f}",
+        })
+    return records
+
+
+# ── Genesis Cloud (product-page parsing; on-demand per GPU) ──────────────────
+
+def fetch_genesiscloud_prices() -> list[dict]:
+    """
+    Parseert de on-demand prijs per GPU op elke Genesis Cloud product-pagina
+    (H100 / H200 / B200). Pattern: '$ X.XX/h On-demand'.
+    EU-datacenters per GPU zijn vastgelegd in GENESIS_REGION_MAP.
+    """
+    import re
+    fx = _usd_to_eur_rate()
+    records = []
+    for gpu_label, url in GENESIS_PRODUCT_PAGES.items():
+        try:
+            r = requests.get(url, timeout=20)
+            r.raise_for_status()
+        except Exception as exc:
+            print(f"  WAARSCHUWING: Genesis Cloud {gpu_label} pagina niet bereikbaar: {exc}")
+            continue
+        text = re.sub(r"<[^>]+>", " ", r.text)
+        text = re.sub(r"\s+", " ", text)
+        m = re.search(r"\$\s*(\d+\.\d+)\s*/h\s+On-demand", text)
+        if not m:
+            print(f"  WAARSCHUWING: Genesis Cloud {gpu_label} on-demand prijs niet gevonden — layout gewijzigd?")
+            continue
+        price_usd = float(m.group(1))
+        lo, hi = _GENESIS_SANITY[gpu_label]
+        if not (lo <= price_usd <= hi):
+            print(f"  WAARSCHUWING: Genesis Cloud {gpu_label} prijs ${price_usd} buiten sanity-range — overgeslagen")
+            continue
+        price_eur = price_usd * fx
+        records.append({
+            "provider": "Genesis Cloud",
+            "gpu_model": gpu_label,
+            "region": GENESIS_REGION_MAP[gpu_label],
+            "instance_type": f"hgx-{gpu_label.lower()}-1gpu",
+            "gpu_count": 1,
+            "price_per_hour_eur": round(price_eur, 4),
+            "price_per_gpu_hour_eur": round(price_eur, 4),
+            "note": f"on-demand per GPU, ${price_usd}/GPU/hr x ECB {fx:.4f}",
+        })
+    return records
 
 # ── Output ────────────────────────────────────────────────────────────────────
 
@@ -438,6 +617,51 @@ def main() -> None:
     else:
         print("  VERDA_CLIENT_ID/SECRET niet ingesteld — overgeslagen")
 
+# Nebius (public docs parsing — geen API-key)
+    try:
+        recs = fetch_nebius_prices()
+        all_records.extend(recs)
+        for rec in recs:
+            print(
+                f"  Nebius {rec['gpu_model']:10s} "
+                f"({rec['region']}): "
+                f"€{rec['price_per_hour_eur']}/hr "
+                f"({rec['gpu_count']}x GPU), "
+                f"€{rec['price_per_gpu_hour_eur']}/GPU/hr"
+            )
+    except Exception as exc:
+        print(f"  FOUT Nebius: {exc}")
+
+    # CoreWeave (public docs parsing — geen API-key)
+    try:
+        recs = fetch_coreweave_prices()
+        all_records.extend(recs)
+        for rec in recs:
+            print(
+                f"  CoreWeave {rec['gpu_model']:6s} "
+                f"({rec['region']}): "
+                f"€{rec['price_per_hour_eur']}/hr "
+                f"({rec['gpu_count']}x GPU), "
+                f"€{rec['price_per_gpu_hour_eur']}/GPU/hr"
+            )
+    except Exception as exc:
+        print(f"  FOUT CoreWeave: {exc}")
+
+    # Genesis Cloud (public product-page parsing — geen API-key)
+    try:
+        recs = fetch_genesiscloud_prices()
+        all_records.extend(recs)
+        for rec in recs:
+            print(
+                f"  Genesis Cloud {rec['gpu_model']:6s} "
+                f"({rec['region']}): "
+                f"€{rec['price_per_hour_eur']}/hr "
+                f"({rec['gpu_count']}x GPU), "
+                f"€{rec['price_per_gpu_hour_eur']}/GPU/hr"
+            )
+    except Exception as exc:
+        print(f"  FOUT Genesis Cloud: {exc}")
+    
     if all_records:
         append_to_csv(all_records, today)
         write_latest_json(all_records, today)
