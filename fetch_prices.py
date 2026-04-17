@@ -126,9 +126,10 @@ CSV_FIELDS = [
 def fetch_gcore_prices(api_key: str = None) -> list[dict]:
     import re, html
     url = "https://gcore.com/pricing/ai"
-    try:
+try:
         r = requests.get(url, timeout=20, headers={"User-Agent": "Mozilla/5.0"})
         r.raise_for_status()
+        r.encoding = "utf-8"   # <-- forceer juiste decoding
     except Exception as e:
         print(f"  WAARSCHUWING: Gcore pricing page niet bereikbaar: {e}")
         return []
