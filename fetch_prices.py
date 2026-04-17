@@ -1,12 +1,9 @@
 #!/usr/bin/env python3
-"""
-ECS Compute Index — dagelijkse prijsfetcher
-Haalt GPU-prijzen op bij Gcore (L40S), OVHcloud (H100), Hetzner (H100 NVL),
-Scaleway (H100 SXM), Verda (H100/H200/B200), Nebius (H100/H200 NVL),
-CoreWeave (H100/H200/B200 EU) en Genesis Cloud (H100/H200/B200 EU) en
-schrijft ze naar prices_history.csv en prices_latest.json.
-"""
-
+# ECS Compute Index - dagelijkse prijsfetcher
+# Haalt GPU-prijzen op bij Gcore (L40S), OVHcloud (H100), Hetzner (H100 NVL),
+# Scaleway (H100 SXM), Verda (H100/H200/B200), Nebius (H100/H200 NVL),
+# CoreWeave (H100/H200/B200 EU) en Genesis Cloud (H100/H200/B200 EU) en
+# schrijft ze naar prices_history.csv en prices_latest.json.
 import csv
 import json
 import os
