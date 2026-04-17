@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """
+"""
 ECS Compute Index — dagelijkse prijsfetcher
 Haalt GPU-prijzen op bij Gcore (L40S), OVHcloud (H100), Hetzner (H100 NVL),
 Scaleway (H100 SXM), Verda (H100), Nebius (H100/H200 NVL), CoreWeave
@@ -43,8 +44,16 @@ SCALEWAY_REGION = "EU (AMS/PAR)"
 SCALEWAY_GPU_MODEL = "H100 SXM"
 
 VERDA_BASE_URL = "https://api.datacrunch.io/v1"
-VERDA_REGION = "EU (FI)"  # Helsinki, Finland
-VERDA_GPU_FILTER = "H100"  # filter op GPU-model
+VERDA_REGION = "EU (FI/IS)"  # Helsinki (FI) + Reykjanesbær (IS)
+
+# Welke GPU-families meenemen + sanity-range (EUR/GPU/hr).
+# Matching gebeurt case-insensitive via 'family in model'. Voeg hier een
+# regel toe als Verda een nieuwe Blackwell/Hopper SKU lanceert.
+_VERDA_GPUS = [
+    ("H100", (1.00, 5.00)),
+    ("H200", (1.50, 6.00)),
+    ("B200", (2.00, 8.00)),
+]
 
 # Nebius (public docs parsing — geen API-key nodig)
 NEBIUS_PRICING_URL = "https://docs.nebius.com/compute/resources/pricing/"
@@ -306,10 +315,11 @@ def fetch_scaleway_prices(secret_key: str) -> list[dict]:
 
 def fetch_verda_prices(client_id: str, client_secret: str) -> list[dict]:
     """
-    Haalt H100-instantieprijzen op via de Verda (DataCrunch) Public API.
+    Haalt on-demand GPU-instantieprijzen op via de Verda (DataCrunch) Public API.
     Stap 1: OAuth2 client-credentials token ophalen.
-    Stap 2: GET /v1/instance-types?currency=EUR, filtert op H100 GPU-model.
-    Prijs: price_per_hour (string EUR/uur), GPU count: gpu.number_of_gpus.
+    Stap 2: GET /v1/instance-types?currency=EUR; per record bepalen we in welke
+    _VERDA_GPUS-familie het GPU-model valt. Buiten _VERDA_GPUS → overgeslagen.
+    Sanity-range geldt op price_per_gpu_hour_eur.
     """
     # Stap 1: token ophalen
     token_r = requests.post(
@@ -334,24 +344,35 @@ def fetch_verda_prices(client_id: str, client_secret: str) -> list[dict]:
     types_r.raise_for_status()
     instance_types = types_r.json()
 
+    sanity = dict(_VERDA_GPUS)
     records = []
     for it in instance_types:
-        if VERDA_GPU_FILTER not in (it.get("model") or "").upper():
+        model_raw = (it.get("model") or "").upper()
+        family = next((f for f, _ in _VERDA_GPUS if f in model_raw), None)
+        if family is None:
             continue
+        lo, hi = sanity[family]
+
         price_str = it.get("price_per_hour")
         if not price_str:
             continue
         price = float(price_str)
         gpu_count = (it.get("gpu") or {}).get("number_of_gpus") or 1
-        gpu_model = it.get("model", "H100")
+        price_per_gpu = price / gpu_count
+        if not (lo <= price_per_gpu <= hi):
+            print(
+                f"  WAARSCHUWING: Verda {family} ({it.get('instance_type')}) "
+                f"€{price_per_gpu:.4f}/GPU/hr buiten sanity-range — overgeslagen"
+            )
+            continue
         records.append({
             "provider": "Verda",
-            "gpu_model": gpu_model,
+            "gpu_model": it.get("model", family),
             "region": VERDA_REGION,
             "instance_type": it.get("instance_type", ""),
             "gpu_count": gpu_count,
             "price_per_hour_eur": round(price, 4),
-            "price_per_gpu_hour_eur": round(price / gpu_count, 4),
+            "price_per_gpu_hour_eur": round(price_per_gpu, 4),
             "note": (it.get("gpu") or {}).get("description", ""),
         })
     return records
