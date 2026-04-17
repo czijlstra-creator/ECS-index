@@ -1,47 +1,7 @@
 {
   "date": "2026-04-17",
-  "fetched": "2026-04-17T10:43:33.693144+00:00",
+  "fetched": "2026-04-17T11:20:59.103803+00:00",
   "prices": [
-    {
-      "provider": "Gcore",
-      "gpu_model": "L40S",
-      "region": "Luxembourg-2 (EU)",
-      "instance_type": "bm3-infrastructure-ai-large-l40s-48-8",
-      "gpu_count": 8,
-      "price_per_hour_eur": 10.4544,
-      "price_per_gpu_hour_eur": 1.3068,
-      "note": "bare metal excl. extern IP (Luxembourg-2)"
-    },
-    {
-      "provider": "OVHcloud",
-      "gpu_model": "H100 SXM",
-      "region": "EU (FR)",
-      "instance_type": "h100-380.consumption",
-      "gpu_count": 4,
-      "price_per_hour_eur": 2.8,
-      "price_per_gpu_hour_eur": 0.7,
-      "note": "H100 SXM 4-GPU bare metal"
-    },
-    {
-      "provider": "OVHcloud",
-      "gpu_model": "H100 SXM",
-      "region": "EU (FR)",
-      "instance_type": "h100-760.consumption",
-      "gpu_count": 8,
-      "price_per_hour_eur": 5.6,
-      "price_per_gpu_hour_eur": 0.7,
-      "note": "H100 SXM 8-GPU bare metal"
-    },
-    {
-      "provider": "OVHcloud",
-      "gpu_model": "H100 SXM",
-      "region": "EU (FR)",
-      "instance_type": "h100-1520.consumption",
-      "gpu_count": 16,
-      "price_per_hour_eur": 11.2,
-      "price_per_gpu_hour_eur": 0.7,
-      "note": "H100 SXM 16-GPU bare metal"
-    },
     {
       "provider": "Scaleway",
       "gpu_model": "H100 SXM",
@@ -301,6 +261,16 @@
       "price_per_hour_eur": 1.8588,
       "price_per_gpu_hour_eur": 1.8588,
       "note": "on-demand per GPU, $2.19/GPU/hr x ECB 0.8488"
+    },
+    {
+      "provider": "Genesis Cloud",
+      "gpu_model": "H200",
+      "region": "EU (FR/ES/FI)",
+      "instance_type": "hgx-h200-1gpu",
+      "gpu_count": 1,
+      "price_per_hour_eur": 2.3765,
+      "price_per_gpu_hour_eur": 2.3765,
+      "note": "on-demand per GPU, $2.8/GPU/hr x ECB 0.8488"
     },
     {
       "provider": "Genesis Cloud",
