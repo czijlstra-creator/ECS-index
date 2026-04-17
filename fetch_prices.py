@@ -124,7 +124,7 @@ CSV_FIELDS = [
 # ── Gcore ─────────────────────────────────────────────────────────────────────
 
 def fetch_gcore_prices(api_key: str = None) -> list[dict]:
-    import re
+    import re, html
     url = "https://gcore.com/pricing/ai"
     try:
         r = requests.get(url, timeout=20, headers={"User-Agent": "Mozilla/5.0"})
@@ -133,26 +133,40 @@ def fetch_gcore_prices(api_key: str = None) -> list[dict]:
         print(f"  WAARSCHUWING: Gcore pricing page niet bereikbaar: {e}")
         return []
 
-    text = re.sub(r"<[^>]+>", " ", r.text)
+    raw = html.unescape(r.text)
+    text = re.sub(r"<[^>]+>", " ", raw)
     text = re.sub(r"\s+", " ", text)
 
-    # Vind de 'On-demand/h' rij (hyphen kan unicode zijn) en pak tot 'Reserve 12'
-    m = re.search(r"On[\u2010-\u2015\-]?demand/h(.{0,2000}?)Reserve\s+12", text, re.IGNORECASE)
-    if not m:
-        print("  WAARSCHUWING: Gcore pricing: On-demand-rij niet gevonden")
-        return []
-    row = m.group(1)
+    # Diagnostic 1: staan er überhaupt 'per GPU' matches in de pagina?
+    global_matches = re.findall(r"€\s*(\d+\.\d+)\s*per\s*GPU", text, re.IGNORECASE)
+    print(f"  [Gcore] totaal aantal 'per GPU' matches: {len(global_matches)}")
+    print(f"  [Gcore] responsegrootte: {len(r.text)} chars")
 
-    per_gpu = re.findall(r"€\s*(\d+\.\d+)\s*per\s*GPU", row, re.IGNORECASE)
+    # Primair: zoek On-demand rij met flexibele hyphen
+    m = re.search(
+        r"On[\s\u00a0\u2010-\u2015\-]*demand.{0,10}?h\b(.{0,2500}?)Reserve",
+        text, re.IGNORECASE
+    )
+    if m:
+        row = m.group(1)
+        per_gpu = re.findall(r"€\s*(\d+\.\d+)\s*per\s*GPU", row, re.IGNORECASE)
+        print(f"  [Gcore] On-demand-rij gevonden, per-GPU prijzen in rij: {per_gpu}")
+    else:
+        print(f"  [Gcore] On-demand-rij-regex faalt - fallback op globale matches")
+        per_gpu = global_matches
+
     if len(per_gpu) < 4:
-        print(f"  WAARSCHUWING: Gcore pricing: slechts {len(per_gpu)} per-GPU prijzen gevonden in rij")
+        # Laatste redmiddel: laat H100-omgeving zien zodat we zien hoe HTML eruitziet
+        h100_ctx = re.search(r".{0,200}H100.{0,400}", text)
+        ctx = (h100_ctx.group(0) if h100_ctx else "(geen H100 in text)")[:600]
+        print(f"  [Gcore] H100-context snippet: {ctx}")
         return []
 
-    # Volgorde op de pagina: H100, A100, L40S, H200 (GB200 = 'Contact sales', geen prijs)
+    # Volgorde op pagina: H100, A100, L40S, H200 (GB200 = contact sales)
     gpu_order = ["H100", "A100", "L40S", "H200"]
     price_map = dict(zip(gpu_order, [float(p) for p in per_gpu[:4]]))
+    print(f"  [Gcore] prijsmap: {price_map}")
 
-    # Config: welke GPU's tracken we, met node-grootte en sanity-ranges
     gcore_page_config = [
         ("H100", 8, (1.50, 5.00)),
         ("H200", 8, (2.00, 6.00)),
@@ -163,7 +177,7 @@ def fetch_gcore_prices(api_key: str = None) -> list[dict]:
     for gpu_model, gpu_count, (lo, hi) in gcore_page_config:
         price_per_gpu = price_map.get(gpu_model)
         if price_per_gpu is None:
-            print(f"  WAARSCHUWING: Gcore pricing: {gpu_model} niet gevonden op pagina")
+            print(f"  WAARSCHUWING: Gcore {gpu_model} niet in prijsmap")
             continue
         if not (lo <= price_per_gpu <= hi):
             print(
