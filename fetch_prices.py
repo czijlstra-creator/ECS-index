@@ -129,11 +129,10 @@ def fetch_gcore_prices(api_key: str = None) -> list[dict]:
 try:
         r = requests.get(url, timeout=20, headers={"User-Agent": "Mozilla/5.0"})
         r.raise_for_status()
-        r.encoding = "utf-8"   # <-- forceer juiste decoding
+        r.encoding = "utf-8"
     except Exception as e:
         print(f"  WAARSCHUWING: Gcore pricing page niet bereikbaar: {e}")
         return []
-
     raw = html.unescape(r.text)
     text = re.sub(r"<[^>]+>", " ", raw)
     text = re.sub(r"\s+", " ", text)
