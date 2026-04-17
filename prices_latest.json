@@ -1,17 +1,7 @@
 {
   "date": "2026-04-17",
-  "fetched": "2026-04-17T12:05:26.878712+00:00",
+  "fetched": "2026-04-17T12:13:53.210546+00:00",
   "prices": [
-    {
-      "provider": "Gcore",
-      "gpu_model": "L40S",
-      "region": "Luxembourg-2",
-      "instance_type": "bm3-infrastructure-ai-large-l40s-48-8",
-      "gpu_count": 8,
-      "price_per_hour_eur": 10.4544,
-      "price_per_gpu_hour_eur": 1.3068,
-      "note": "Gcore bare-metal cloud-API (multi-region)"
-    },
     {
       "provider": "OVHcloud",
       "gpu_model": "H100 SXM",
