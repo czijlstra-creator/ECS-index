@@ -44,7 +44,7 @@
 <header>
   <div>
     <div class="logo">ECS — <span>European Compute Standard</span></div>
-    <div class="tagline">Daily H100 GPU pricing index across EU cloud providers</div>
+    <div class="tagline">H100 GPU pricing index across EU cloud providers · refreshed 4×/day</div>
   </div>
   <div class="last-updated" id="lastUpdated">Loading…</div>
 </header>
@@ -52,7 +52,7 @@
   <div class="loading"><div class="spinner"></div>Fetching latest data…</div>
 </main>
 <footer>
-  Data sourced from official provider APIs · Updated daily via GitHub Actions ·
+  Data sourced from official provider APIs · Updated 4× daily via GitHub Actions (03/09/15/21 UTC) ·
   <a href="https://github.com/czijlstra-creator/ECS-index" target="_blank">GitHub</a>
 </footer>
 <script>
@@ -108,7 +108,7 @@ function render({ latest, history }) {
       <div class="kpi"><div class="kpi-label">ECS Index</div><div class="kpi-value accent">€${index.toFixed(3)}</div><div class="kpi-sub">median H100 GPU/hr (EU)</div></div>
       <div class="kpi"><div class="kpi-label">Best price today</div><div class="kpi-value green">€${cheapest?.price_per_gpu_hour_eur.toFixed(3)??'—'}</div><div class="kpi-sub">${cheapest?.provider} · ${cheapest?.instance_type}</div></div>
       <div class="kpi"><div class="kpi-label">Providers tracked</div><div class="kpi-value">${providers.length}</div><div class="kpi-sub">${providers.join(', ')}</div></div>
-      <div class="kpi"><div class="kpi-label">Days of history</div><div class="kpi-value">${days}</div><div class="kpi-sub">updated daily</div></div>
+      <div class="kpi"><div class="kpi-label">Days of history</div><div class="kpi-value">${days}</div><div class="kpi-sub">refreshed 4×/day</div></div>
     </div>
     <div class="chart-card">
       <div class="chart-title">H100 Price History — cheapest per provider</div>
