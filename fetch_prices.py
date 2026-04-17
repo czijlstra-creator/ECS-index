@@ -595,23 +595,20 @@ def main() -> None:
     all_records: list[dict] = []
 
     # Gcore
-    gcore_key = os.environ.get("GCORE_API_KEY", "")
-    if gcore_key:
-        try:
-            recs = fetch_gcore_prices(gcore_key)
-            all_records.extend(recs)
-            for rec in recs:
-                print(
-                    f"  Gcore {rec['gpu_model']:6s} "
-                    f"({rec['region']}): "
-                    f"€{rec['price_per_hour_eur']}/hr "
-                    f"({rec['gpu_count']}x GPU), "
-                    f"€{rec['price_per_gpu_hour_eur']}/GPU/hr"
-                )
-        except Exception as exc:
-            print(f"  FOUT Gcore: {exc}")
-    else:
-        print("  GCORE_API_KEY niet ingesteld — overgeslagen")
+   # Gcore (pricing-page scrape — geen API-key nodig)
+    try:
+        recs = fetch_gcore_prices()
+        all_records.extend(recs)
+        for rec in recs:
+            print(
+                f"  Gcore {rec['gpu_model']:6s} "
+                f"({rec['region']}): "
+                f"€{rec['price_per_hour_eur']}/hr "
+                f"({rec['gpu_count']}x GPU), "
+                f"€{rec['price_per_gpu_hour_eur']}/GPU/hr"
+            )
+    except Exception as exc:
+        print(f"  FOUT Gcore: {exc}")
 
     # OVHcloud
     try:
