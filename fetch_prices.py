@@ -125,92 +125,84 @@ CSV_FIELDS = [
 def fetch_gcore_prices(api_key: str) -> list[dict]:
     results = []
     headers = {"Authorization": f"APIKey {api_key}"}
-    url = (
-        f"https://api.gcore.com/cloud/v1/bmflavors/"
-        f"{GCORE_PROJECT_ID}/{GCORE_REGION_ID}?include_prices=true"
-    )
+
+    # Stap 1: alle regio's ophalen
+    regions_url = "https://api.gcore.com/cloud/v1/regions"
     try:
-        resp = requests.get(url, headers=headers, timeout=30)
-        resp.raise_for_status()
+        rr = requests.get(regions_url, headers=headers, timeout=30)
+        rr.raise_for_status()
+        regions_data = rr.json()
     except Exception as e:
-        print(f"  WAARSCHUWING: Gcore HTTP-fout {url}: {e}")
-        return results
-    try:
-        data = resp.json()
-    except ValueError:
-        print(f"  WAARSCHUWING: Gcore response geen JSON - eerste 300 chars: {resp.text[:300]}")
-        return results
-
-    if isinstance(data, dict):
-        print(f"  [Gcore] top-level keys: {sorted(data.keys())}")
-        items = (
-            data.get("results")
-            or data.get("flavors")
-            or data.get("data")
-            or data.get("items")
-            or []
-        )
-    elif isinstance(data, list):
-        items = data
+        print(f"  WAARSCHUWING: Gcore regions-endpoint fout: {e}")
+        regions = [{"id": GCORE_REGION_ID, "display_name": GCORE_REGION}]
     else:
-        items = []
+        regions_items = (
+            regions_data.get("results") if isinstance(regions_data, dict) else regions_data
+        )
+        regions = [
+            {"id": r.get("id"), "display_name": r.get("display_name") or r.get("name")}
+            for r in (regions_items or [])
+            if isinstance(r, dict) and r.get("id") is not None
+        ] or [{"id": GCORE_REGION_ID, "display_name": GCORE_REGION}]
 
-    if not items:
-        print(f"  WAARSCHUWING: Gcore lege items-lijst")
-        return results
+    print(f"  [Gcore] {len(regions)} regio's aangetroffen")
 
-    first = items[0] if isinstance(items[0], dict) else {}
-    print(f"  [Gcore] aantal items: {len(items)}, voorbeeld-keys: {sorted(first.keys())}")
+    # Stap 2: per regio bmflavors + prijzen ophalen
+    all_flavors = []
+    for region in regions:
+        region_id = region["id"]
+        region_name = region["display_name"]
+        url = (
+            f"https://api.gcore.com/cloud/v1/bmflavors/"
+            f"{GCORE_PROJECT_ID}/{region_id}?include_prices=true"
+        )
+        try:
+            resp = requests.get(url, headers=headers, timeout=30)
+            if resp.status_code in (403, 404):
+                continue  # project heeft geen toegang tot deze regio
+            resp.raise_for_status()
+            data = resp.json()
+        except Exception as e:
+            print(f"  WAARSCHUWING: Gcore regio {region_name}: {e}")
+            continue
+        items = data.get("results") if isinstance(data, dict) else data
+        for it in (items or []):
+            if isinstance(it, dict):
+                it["_region_name"] = region_name
+                all_flavors.append(it)
 
-    # Dump alle GPU-flavor-namen — zo zien we of onze slugs nog kloppen
-    all_names = [
-        it.get("flavor_name") or it.get("name")
-        for it in items if isinstance(it, dict)
-    ]
-    gpu_names = [
-        n for n in all_names
-        if n and any(g in n.lower() for g in ("h100", "h200", "l40s", "b200", "gb200"))
-    ]
-    print(f"  [Gcore] GPU-flavors beschikbaar: {gpu_names}")
+    # Diagnostic: welke GPU-flavors zijn in totaal zichtbaar?
+    gpu_names = sorted({
+        f.get("flavor_name") for f in all_flavors
+        if f.get("flavor_name") and any(
+            g in f["flavor_name"].lower()
+            for g in ("h100", "h200", "l40s", "b200", "gb200")
+        )
+    })
+    print(f"  [Gcore] GPU-flavors over alle regio's: {gpu_names}")
 
+    # Stap 3: matchen tegen onze config
     for gpu_model, flavor_slug, gpu_count, (lo, hi) in _GCORE_GPUS:
         item = next(
-            (
-                it for it in items
-                if isinstance(it, dict) and any(
-                    it.get(k) == flavor_slug
-                    for k in ("flavor_name", "name", "flavor", "sku", "slug")
-                )
-            ),
+            (f for f in all_flavors if f.get("flavor_name") == flavor_slug),
             None,
         )
         if not item:
             print(f"  WAARSCHUWING: Gcore flavor niet gevonden: {flavor_slug}")
             continue
 
-        price_raw = None
-        for field in ("price_per_hour", "hourly_price", "price_per_unit", "price", "rate"):
-            v = item.get(field)
-            if v is None:
-                continue
-            if isinstance(v, dict):
-                price_raw = v.get("value") or v.get("amount") or v.get("price")
-            else:
-                price_raw = v
-            if price_raw is not None:
-                break
-        if price_raw is None and isinstance(item.get("price_status"), dict):
-            ps = item["price_status"]
-            price_raw = ps.get("price_per_hour") or ps.get("hourly_price") or ps.get("value")
+        price_raw = item.get("price_per_hour")
+        if isinstance(price_raw, dict):
+            price_raw = price_raw.get("value") or price_raw.get("amount")
 
         try:
             price_per_node_hour = float(price_raw) if price_raw is not None else 0.0
         except (TypeError, ValueError):
-            print(f"  WAARSCHUWING: Gcore prijs niet parsebaar voor {flavor_slug}: {price_raw} (keys: {sorted(item.keys())})")
+            print(f"  WAARSCHUWING: Gcore prijs niet parsebaar voor {flavor_slug}: {price_raw}")
             continue
 
         if price_per_node_hour == 0.0:
-            print(f"  WAARSCHUWING: Gcore prijs 0.00 voor {flavor_slug} - item keys: {sorted(item.keys())}")
+            print(f"  WAARSCHUWING: Gcore prijs 0.00 voor {flavor_slug}")
             continue
 
         price_per_gpu_hour = price_per_node_hour / gpu_count
@@ -224,12 +216,12 @@ def fetch_gcore_prices(api_key: str) -> list[dict]:
         results.append({
             "provider": "Gcore",
             "gpu_model": gpu_model,
-            "region": GCORE_REGION,
+            "region": item.get("_region_name", GCORE_REGION),
             "instance_type": flavor_slug,
             "gpu_count": gpu_count,
             "price_per_hour_eur": round(price_per_node_hour, 4),
             "price_per_gpu_hour_eur": round(price_per_gpu_hour, 4),
-            "note": "Gcore bare-metal cloud-API",
+            "note": "Gcore bare-metal cloud-API (multi-region)",
         })
     return results
 
