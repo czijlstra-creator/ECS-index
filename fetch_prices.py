@@ -124,48 +124,40 @@ CSV_FIELDS = [
 # ── Gcore ─────────────────────────────────────────────────────────────────────
 
 def fetch_gcore_prices(api_key: str = None) -> list[dict]:
-    import re, html
+    import re
+    import html
     url = "https://gcore.com/pricing/ai"
-try:
+    try:
         r = requests.get(url, timeout=20, headers={"User-Agent": "Mozilla/5.0"})
         r.raise_for_status()
         r.encoding = "utf-8"
     except Exception as e:
         print(f"  WAARSCHUWING: Gcore pricing page niet bereikbaar: {e}")
         return []
+
     raw = html.unescape(r.text)
     text = re.sub(r"<[^>]+>", " ", raw)
     text = re.sub(r"\s+", " ", text)
 
-    # Diagnostic 1: staan er überhaupt 'per GPU' matches in de pagina?
     global_matches = re.findall(r"€\s*(\d+\.\d+)\s*per\s*GPU", text, re.IGNORECASE)
     print(f"  [Gcore] totaal aantal 'per GPU' matches: {len(global_matches)}")
-    print(f"  [Gcore] responsegrootte: {len(r.text)} chars")
 
-    # Primair: zoek On-demand rij met flexibele hyphen
     m = re.search(
         r"On[\s\u00a0\u2010-\u2015\-]*demand.{0,10}?h\b(.{0,2500}?)Reserve",
-        text, re.IGNORECASE
+        text, re.IGNORECASE,
     )
     if m:
         row = m.group(1)
         per_gpu = re.findall(r"€\s*(\d+\.\d+)\s*per\s*GPU", row, re.IGNORECASE)
-        print(f"  [Gcore] On-demand-rij gevonden, per-GPU prijzen in rij: {per_gpu}")
     else:
-        print(f"  [Gcore] On-demand-rij-regex faalt - fallback op globale matches")
         per_gpu = global_matches
 
     if len(per_gpu) < 4:
-        # Laatste redmiddel: laat H100-omgeving zien zodat we zien hoe HTML eruitziet
-        h100_ctx = re.search(r".{0,200}H100.{0,400}", text)
-        ctx = (h100_ctx.group(0) if h100_ctx else "(geen H100 in text)")[:600]
-        print(f"  [Gcore] H100-context snippet: {ctx}")
+        print(f"  WAARSCHUWING: Gcore pricing: slechts {len(per_gpu)} per-GPU prijzen gevonden")
         return []
 
-    # Volgorde op pagina: H100, A100, L40S, H200 (GB200 = contact sales)
     gpu_order = ["H100", "A100", "L40S", "H200"]
     price_map = dict(zip(gpu_order, [float(p) for p in per_gpu[:4]]))
-    print(f"  [Gcore] prijsmap: {price_map}")
 
     gcore_page_config = [
         ("H100", 8, (1.50, 5.00)),
@@ -177,7 +169,6 @@ try:
     for gpu_model, gpu_count, (lo, hi) in gcore_page_config:
         price_per_gpu = price_map.get(gpu_model)
         if price_per_gpu is None:
-            print(f"  WAARSCHUWING: Gcore {gpu_model} niet in prijsmap")
             continue
         if not (lo <= price_per_gpu <= hi):
             print(
