@@ -1,128 +1,358 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ECS — European Compute Standard</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-  <style>
-    :root { --bg: #0d1117; --surface: #161b22; --border: #21262d; --text: #e6edf3; --muted: #8b949e; --accent: #58a6ff; --green: #3fb950; --orange: #d29922; }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; font-size: 14px; line-height: 1.5; }
-    a { color: var(--accent); text-decoration: none; } a:hover { text-decoration: underline; }
-    header { border-bottom: 1px solid var(--border); padding: 18px 32px; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
-    .logo { font-size: 20px; font-weight: 700; letter-spacing: -.4px; } .logo span { color: var(--accent); }
-    .tagline { color: var(--muted); font-size: 12px; margin-top: 2px; } .last-updated { font-size: 12px; color: var(--muted); text-align: right; }
-    main { max-width: 1200px; margin: 0 auto; padding: 32px 24px 64px; }
-    .kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 32px; }
-    .kpi { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 20px 24px; }
-    .kpi-label { font-size: 11px; text-transform: uppercase; letter-spacing: .8px; color: var(--muted); margin-bottom: 8px; }
-    .kpi-value { font-size: 28px; font-weight: 700; line-height: 1; } .kpi-sub { font-size: 12px; color: var(--muted); margin-top: 6px; }
-    .kpi-value.accent { color: var(--accent); } .kpi-value.green { color: var(--green); }
-    .chart-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 24px; }
-    .chart-title { font-size: 15px; font-weight: 600; margin-bottom: 4px; } .chart-sub { font-size: 12px; color: var(--muted); margin-bottom: 20px; }
-    .chart-wrap { position: relative; height: 320px; }
-    .table-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin-top: 32px; }
-    .table-header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
-    .table-header h2 { font-size: 15px; font-weight: 600; } .table-header span { font-size: 12px; color: var(--muted); }
-    table { width: 100%; border-collapse: collapse; } thead tr { border-bottom: 1px solid var(--border); }
-    th { padding: 10px 16px; text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: .6px; color: var(--muted); font-weight: 500; white-space: nowrap; }
-    th.right, td.right { text-align: right; }
-    td { padding: 11px 16px; border-bottom: 1px solid var(--border); font-variant-numeric: tabular-nums; }
-    tbody tr:last-child td { border-bottom: none; } tbody tr:hover { background: rgba(255,255,255,.03); }
-    .badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 500; }
-    .best { background: rgba(63,185,80,.15); color: var(--green); }
-    .provider-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; vertical-align: middle; }
-    footer { border-top: 1px solid var(--border); padding: 20px 32px; font-size: 12px; color: var(--muted); text-align: center; }
-    .loading { text-align: center; padding: 80px 20px; color: var(--muted); }
-    .spinner { width: 32px; height: 32px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; margin: 0 auto 16px; }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    @media (max-width: 640px) { main { padding: 20px 16px 40px; } header { padding: 14px 16px; } .kpi-value { font-size: 22px; } }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ECS — European Compute Standard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #0d1117; --surface: #161b22; --border: #21262d;
+    --text: #e6edf3; --muted: #8b949e; --accent: #58a6ff;
+    --green: #3fb950; --orange: #d29922; --purple: #bc8cff;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; font-size: 14px; line-height: 1.5; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  header { border-bottom: 1px solid var(--border); padding: 18px 32px; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+  .logo { font-size: 20px; font-weight: 700; letter-spacing: -.4px; }
+  .logo span { color: var(--accent); }
+  .tagline { color: var(--muted); font-size: 12px; margin-top: 2px; }
+  .last-updated { font-size: 12px; color: var(--muted); text-align: right; }
+
+  main { max-width: 1200px; margin: 0 auto; padding: 32px 24px 64px; }
+
+  .chart-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 24px; margin-bottom: 24px; }
+  .chart-card .title-row { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 12px; margin-bottom: 4px; }
+  .chart-title { font-size: 16px; font-weight: 600; }
+  .chart-sub { font-size: 12px; color: var(--muted); }
+  .chart-stats { display: flex; gap: 24px; margin: 16px 0 20px; flex-wrap: wrap; }
+  .stat { display: flex; flex-direction: column; }
+  .stat-label { font-size: 10px; text-transform: uppercase; letter-spacing: .8px; color: var(--muted); margin-bottom: 3px; }
+  .stat-value { font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .stat-value.median { color: var(--accent); }
+  .stat-value.average { color: var(--orange); }
+  .stat-value.providers { color: var(--green); }
+  .chart-wrap { position: relative; height: 220px; }
+
+  .empty-state { padding: 40px 20px; text-align: center; color: var(--muted); font-size: 13px; font-style: italic; }
+
+  .table-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin-top: 32px; }
+  .table-header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+  .table-header h2 { font-size: 15px; font-weight: 600; }
+  .table-header span { font-size: 12px; color: var(--muted); }
+  .gpu-tabs { display: flex; gap: 4px; }
+  .gpu-tab { padding: 6px 14px; font-size: 12px; font-weight: 600; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; color: var(--muted); cursor: pointer; transition: all .15s; }
+  .gpu-tab:hover { color: var(--text); }
+  .gpu-tab.active { background: var(--accent); color: #0d1117; border-color: var(--accent); }
+
+  table { width: 100%; border-collapse: collapse; }
+  thead tr { border-bottom: 1px solid var(--border); }
+  th { padding: 10px 16px; text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: .6px; color: var(--muted); font-weight: 500; white-space: nowrap; }
+  th.right, td.right { text-align: right; }
+  td { padding: 11px 16px; border-bottom: 1px solid var(--border); font-variant-numeric: tabular-nums; }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:hover { background: rgba(255,255,255,.03); }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 500; }
+  .best { background: rgba(63,185,80,.15); color: var(--green); }
+  .b-h100 { background: rgba(88,166,255,.15); color: var(--accent); }
+  .b-h200 { background: rgba(210,153,34,.15); color: var(--orange); }
+  .b-b200 { background: rgba(188,140,255,.15); color: var(--purple); }
+
+  footer { border-top: 1px solid var(--border); padding: 20px 32px; font-size: 12px; color: var(--muted); text-align: center; }
+
+  .loading { text-align: center; padding: 80px 20px; color: var(--muted); }
+  .spinner { width: 32px; height: 32px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; margin: 0 auto 16px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  @media (max-width: 640px) {
+    main { padding: 20px 16px 40px; }
+    header { padding: 14px 16px; }
+    .stat-value { font-size: 16px; }
+  }
+</style>
 </head>
 <body>
+
 <header>
   <div>
     <div class="logo">ECS — <span>European Compute Standard</span></div>
-    <div class="tagline">H100 GPU pricing index across EU cloud providers · refreshed 4×/day</div>
+    <div class="tagline">GPU pricing index across EU cloud providers · refreshed 4×/day</div>
   </div>
   <div class="last-updated" id="lastUpdated">Loading…</div>
 </header>
+
 <main id="app">
   <div class="loading"><div class="spinner"></div>Fetching latest data…</div>
 </main>
+
 <footer>
-  Data sourced from official provider APIs · Updated 4× daily via GitHub Actions (03/09/15/21 UTC) ·
+  Data sourced from official provider APIs and public rate cards · Updated 4× daily via GitHub Actions (03/09/15/21 UTC) ·
   <a href="https://github.com/czijlstra-creator/ECS-index" target="_blank">GitHub</a>
 </footer>
+
 <script>
-const PROVIDER_COLORS = { Gcore:'#58a6ff', OVHcloud:'#3fb950', Scaleway:'#d29922', Verda:'#bc8cff', Hetzner:'#f85149', Nebius:'#79c0ff' };
-const DEFAULT_COLOR = '#8b949e';
-function providerColor(name) { for (const [k,v] of Object.entries(PROVIDER_COLORS)) { if (name.toLowerCase().includes(k.toLowerCase())) return v; } return DEFAULT_COLOR; }
+const GPU_FAMILIES = ['H100', 'H200', 'B200'];
+const GPU_DESCR = {
+  H100: 'NVIDIA H100 (SXM / NVL) · on-demand per GPU-hour',
+  H200: 'NVIDIA H200 (HGX / NVL) · on-demand per GPU-hour',
+  B200: 'NVIDIA B200 (HGX / Blackwell) · on-demand per GPU-hour',
+};
+
 function parseCSV(text) {
   const lines = text.trim().split('\n');
   const headers = lines[0].split(',').map(h => h.trim());
   return lines.slice(1).map(line => {
-    const vals = line.split(','); const obj = {};
-    headers.forEach((h,i) => obj[h] = (vals[i]||'').trim());
-    obj.price_per_gpu_hour_eur = parseFloat(obj.price_per_gpu_hour_eur)||0;
-    obj.price_per_hour_eur = parseFloat(obj.price_per_hour_eur)||0;
-    obj.gpu_count = parseInt(obj.gpu_count)||1;
+    const vals = line.split(',');
+    const obj = {};
+    headers.forEach((h, i) => obj[h] = (vals[i] || '').trim());
+    obj.price_per_gpu_hour_eur = parseFloat(obj.price_per_gpu_hour_eur) || 0;
+    obj.price_per_hour_eur = parseFloat(obj.price_per_hour_eur) || 0;
+    obj.gpu_count = parseInt(obj.gpu_count) || 1;
     return obj;
   }).filter(r => r.date && r.provider);
 }
+
+function gpuFamily(model) {
+  if (!model) return null;
+  const m = model.toString().toUpperCase();
+  return GPU_FAMILIES.find(f => m.startsWith(f)) || null;
+}
+
 async function loadData() {
-  const [jsonRes, csvRes] = await Promise.all([fetch('./prices_latest.json'), fetch('./prices_history.csv')]);
+  const [jsonRes, csvRes] = await Promise.all([
+    fetch('./prices_latest.json'),
+    fetch('./prices_history.csv'),
+  ]);
   const raw = await jsonRes.json();
-  const latest = Array.isArray(raw) ? raw : (raw.prices||[]).map(r => ({...r, date: raw.date}));
+  const latest = Array.isArray(raw)
+    ? raw
+    : (raw.prices || []).map(r => ({ ...r, date: raw.date }));
   const history = parseCSV(await csvRes.text());
   return { latest, history };
 }
-function computeIndex(records) {
-  const byProvider = {};
-  for (const r of records) { if (!byProvider[r.provider] || r.price_per_gpu_hour_eur < byProvider[r.provider]) byProvider[r.provider] = r.price_per_gpu_hour_eur; }
-  const prices = Object.values(byProvider).filter(p => p > 0).sort((a,b) => a-b);
-  if (!prices.length) return 0;
-  const mid = Math.floor(prices.length/2);
-  return prices.length%2===0 ? (prices[mid-1]+prices[mid])/2 : prices[mid];
-}
-function buildChartData(history) {
+
+function buildCheapestPerProviderByDate(records, family) {
   const map = {};
-  for (const r of history) { if (!map[r.date]) map[r.date]={}; if (!map[r.date][r.provider]||r.price_per_gpu_hour_eur<map[r.date][r.provider]) map[r.date][r.provider]=r.price_per_gpu_hour_eur; }
-  const dates = Object.keys(map).sort();
-  const providers = [...new Set(history.map(r => r.provider))].sort();
-  return { labels: dates, datasets: providers.map(p => ({ label:p, data:dates.map(d=>map[d][p]??null), borderColor:providerColor(p), backgroundColor:providerColor(p)+'22', pointRadius:dates.length<=14?4:2, pointHoverRadius:6, tension:0.3, spanGaps:true })) };
+  for (const r of records) {
+    if (!r.price_per_gpu_hour_eur || r.price_per_gpu_hour_eur <= 0) continue;
+    if (gpuFamily(r.gpu_model) !== family) continue;
+    if (!map[r.date]) map[r.date] = {};
+    const cur = map[r.date][r.provider];
+    if (cur === undefined || r.price_per_gpu_hour_eur < cur) {
+      map[r.date][r.provider] = r.price_per_gpu_hour_eur;
+    }
+  }
+  return map;
 }
-function render({ latest, history }) {
-  const app = document.getElementById('app');
-  const today = latest[0]?.date || '—';
-  const index = computeIndex(latest);
-  const providers = [...new Set(latest.map(r => r.provider))];
-  const cheapest = [...latest].sort((a,b) => a.price_per_gpu_hour_eur - b.price_per_gpu_hour_eur)[0];
-  const days = [...new Set(history.map(r => r.date))].length;
-  document.getElementById('lastUpdated').innerHTML = `Last updated: <strong>${today}</strong>`;
-  const tableRows = [...latest].sort((a,b) => a.price_per_gpu_hour_eur - b.price_per_gpu_hour_eur);
-  const bestPrice = tableRows[0]?.price_per_gpu_hour_eur;
-  app.innerHTML = `
-    <div class="kpi-row">
-      <div class="kpi"><div class="kpi-label">ECS Index</div><div class="kpi-value accent">€${index.toFixed(3)}</div><div class="kpi-sub">median H100 GPU/hr (EU)</div></div>
-      <div class="kpi"><div class="kpi-label">Best price today</div><div class="kpi-value green">€${cheapest?.price_per_gpu_hour_eur.toFixed(3)??'—'}</div><div class="kpi-sub">${cheapest?.provider} · ${cheapest?.instance_type}</div></div>
-      <div class="kpi"><div class="kpi-label">Providers tracked</div><div class="kpi-value">${providers.length}</div><div class="kpi-sub">${providers.join(', ')}</div></div>
-      <div class="kpi"><div class="kpi-label">Days of history</div><div class="kpi-value">${days}</div><div class="kpi-sub">refreshed 4×/day</div></div>
-    </div>
+
+function computeSeries(dateMap) {
+  const dates = Object.keys(dateMap).sort();
+  const medians = [], averages = [], counts = [];
+  for (const d of dates) {
+    const prices = Object.values(dateMap[d]).filter(p => p > 0).sort((a, b) => a - b);
+    counts.push(prices.length);
+    if (!prices.length) { medians.push(null); averages.push(null); continue; }
+    const mid = Math.floor(prices.length / 2);
+    medians.push(prices.length % 2 === 0 ? (prices[mid - 1] + prices[mid]) / 2 : prices[mid]);
+    averages.push(prices.reduce((a, b) => a + b, 0) / prices.length);
+  }
+  return { dates, medians, averages, counts };
+}
+
+function formatDate(d) {
+  const date = new Date(d);
+  return date.toLocaleDateString('nl-NL', { day: '2-digit', month: 'short' });
+}
+
+function renderChartCard(family, latest, history) {
+  const latestMap = buildCheapestPerProviderByDate(latest, family);
+  const histMap = buildCheapestPerProviderByDate(history, family);
+  const series = computeSeries(histMap);
+
+  const latestDates = Object.keys(latestMap);
+  const todayDate = latestDates.length ? latestDates[latestDates.length - 1] : null;
+  const todayPrices = todayDate ? Object.values(latestMap[todayDate]).filter(p => p > 0).sort((a, b) => a - b) : [];
+  const nProviders = todayPrices.length;
+  let todayMedian = null, todayAvg = null;
+  if (todayPrices.length) {
+    const mid = Math.floor(todayPrices.length / 2);
+    todayMedian = todayPrices.length % 2 === 0 ? (todayPrices[mid - 1] + todayPrices[mid]) / 2 : todayPrices[mid];
+    todayAvg = todayPrices.reduce((a, b) => a + b, 0) / todayPrices.length;
+  }
+
+  const cardId = `chart-${family.toLowerCase()}`;
+
+  if (!nProviders && !series.dates.length) {
+    return `
+      <div class="chart-card">
+        <div class="title-row">
+          <div>
+            <div class="chart-title">${family} · Live pricing</div>
+            <div class="chart-sub">${GPU_DESCR[family]}</div>
+          </div>
+        </div>
+        <div class="empty-state">No ${family} data yet — waiting for providers to publish.</div>
+      </div>`;
+  }
+
+  return `
     <div class="chart-card">
-      <div class="chart-title">H100 Price History — cheapest per provider</div>
-      <div class="chart-sub">€ per GPU per hour · EU regions only</div>
-      <div class="chart-wrap"><canvas id="historyChart"></canvas></div>
-    </div>
-    <div class="table-card">
-      <div class="table-header"><h2>Today’s prices</h2><span>${today} · ${tableRows.length} listings</span></div>
-      <table><thead><tr><th>Provider</th><th>Instance</th><th>Region</th><th class="right">GPUs</th><th class="right">€/hr</th><th class="right">€/GPU/hr</th><th></th></tr></thead>
-      <tbody>${tableRows.map(r=>`<tr><td><span class="provider-dot" style="background:${providerColor(r.provider)}"></span>${r.provider}</td><td style="color:var(--muted);font-size:12px">${r.instance_type}</td><td style="color:var(--muted);font-size:12px">${r.region}</td><td class="right">${r.gpu_count}</td><td class="right">€${parseFloat(r.price_per_hour_eur).toFixed(3)}</td><td class="right"><strong>€${parseFloat(r.price_per_gpu_hour_eur).toFixed(4)}</strong></td><td>${r.price_per_gpu_hour_eur===bestPrice?'<span class="badge best">best</span>':''}</td></tr>`).join('')}</tbody></table>
+      <div class="title-row">
+        <div>
+          <div class="chart-title">${family} · Live pricing</div>
+          <div class="chart-sub">${GPU_DESCR[family]}</div>
+        </div>
+      </div>
+      <div class="chart-stats">
+        <div class="stat"><span class="stat-label">Median €/GPU/hr</span><span class="stat-value median">${todayMedian !== null ? '€' + todayMedian.toFixed(3) : '—'}</span></div>
+        <div class="stat"><span class="stat-label">Average €/GPU/hr</span><span class="stat-value average">${todayAvg !== null ? '€' + todayAvg.toFixed(3) : '—'}</span></div>
+        <div class="stat"><span class="stat-label">Providers today</span><span class="stat-value providers">${nProviders}</span></div>
+      </div>
+      <div class="chart-wrap"><canvas id="${cardId}"></canvas></div>
     </div>`;
-  new Chart(document.getElementById('historyChart'), { type:'line', data:buildChartData(history), options:{ responsive:true, maintainAspectRatio:false, interaction:{mode:'index',intersect:false}, plugins:{ legend:{labels:{color:'#8b949e',font:{size:12},boxWidth:12,padding:16}}, tooltip:{backgroundColor:'#1c2128',borderColor:'#30363d',borderWidth:1,titleColor:'#e6edf3',bodyColor:'#8b949e',callbacks:{label:ctx=>` ${ctx.dataset.label}: €${ctx.parsed.y?.toFixed(4)??'—'}/GPU/hr`}}}, scales:{ x:{ticks:{color:'#8b949e',font:{size:11},maxTicksLimit:10},grid:{color:'#21262d'}}, y:{ticks:{color:'#8b949e',font:{size:11},callback:v=>`€${v.toFixed(2)}`},grid:{color:'#21262d'},title:{display:true,text:'€ / GPU / hr',color:'#8b949e',font:{size:11}}}}}});
 }
-loadData().then(render).catch(err => { document.getElementById('app').innerHTML = `<div class="loading"><p style="color:#f85149">Failed to load data: ${err.message}</p></div>`; });
+
+function drawChart(family, history) {
+  const histMap = buildCheapestPerProviderByDate(history, family);
+  const series = computeSeries(histMap);
+  if (!series.dates.length) return;
+
+  const ctx = document.getElementById(`chart-${family.toLowerCase()}`);
+  if (!ctx) return;
+
+  new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: series.dates.map(formatDate),
+      datasets: [
+        {
+          label: 'Median',
+          data: series.medians,
+          borderColor: '#58a6ff',
+          backgroundColor: 'rgba(88,166,255,0.12)',
+          borderWidth: 2.5,
+          pointRadius: series.dates.length <= 14 ? 4 : 2,
+          pointHoverRadius: 6,
+          tension: 0.3,
+          spanGaps: true,
+          fill: true,
+        },
+        {
+          label: 'Average',
+          data: series.averages,
+          borderColor: '#d29922',
+          backgroundColor: 'rgba(210,153,34,0)',
+          borderWidth: 2,
+          borderDash: [6, 4],
+          pointRadius: series.dates.length <= 14 ? 3 : 1,
+          pointHoverRadius: 5,
+          tension: 0.3,
+          spanGaps: true,
+          fill: false,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { labels: { color: '#8b949e', font: { size: 12 }, boxWidth: 14, padding: 16 } },
+        tooltip: {
+          backgroundColor: '#1c2128', borderColor: '#30363d', borderWidth: 1,
+          titleColor: '#e6edf3', bodyColor: '#8b949e',
+          callbacks: { label: ctx => ` ${ctx.dataset.label}: €${ctx.parsed.y?.toFixed(4) ?? '—'}/GPU/hr` },
+        },
+      },
+      scales: {
+        x: { ticks: { color: '#8b949e', font: { size: 11 }, maxTicksLimit: 10 }, grid: { color: '#21262d' } },
+        y: { ticks: { color: '#8b949e', font: { size: 11 }, callback: v => '€' + v.toFixed(2) }, grid: { color: '#21262d' }, title: { display: true, text: '€ / GPU / hr', color: '#8b949e', font: { size: 11 } } },
+      },
+    },
+  });
+}
+
+function renderTableRows(latest, activeFamily) {
+  const filtered = activeFamily === 'ALL'
+    ? latest
+    : latest.filter(r => gpuFamily(r.gpu_model) === activeFamily);
+  const sorted = [...filtered].sort((a, b) => a.price_per_gpu_hour_eur - b.price_per_gpu_hour_eur);
+  if (!sorted.length) {
+    return `<tr><td colspan="7" class="empty-state">No records for ${activeFamily}.</td></tr>`;
+  }
+  const bestPerFamily = {};
+  for (const r of sorted) {
+    const f = gpuFamily(r.gpu_model);
+    if (f && (bestPerFamily[f] === undefined || r.price_per_gpu_hour_eur < bestPerFamily[f])) {
+      bestPerFamily[f] = r.price_per_gpu_hour_eur;
+    }
+  }
+  return sorted.map(r => {
+    const f = gpuFamily(r.gpu_model);
+    const isBest = f && r.price_per_gpu_hour_eur === bestPerFamily[f];
+    const badgeClass = f ? `b-${f.toLowerCase()}` : '';
+    return `<tr>
+      <td><strong>${r.provider}</strong></td>
+      <td>${f ? `<span class="badge ${badgeClass}">${r.gpu_model}</span>` : r.gpu_model}</td>
+      <td style="color:var(--muted);font-size:12px">${r.region || '—'}</td>
+      <td style="color:var(--muted);font-size:12px">${r.instance_type || '—'}</td>
+      <td class="right">${r.gpu_count}</td>
+      <td class="right"><strong>€${parseFloat(r.price_per_gpu_hour_eur).toFixed(4)}</strong></td>
+      <td>${isBest ? '<span class="badge best">best</span>' : ''}</td>
+    </tr>`;
+  }).join('');
+}
+
+function render({ latest, history }) {
+  const today = latest[0]?.date || '—';
+  document.getElementById('lastUpdated').innerHTML = `Last updated: <strong>${today}</strong>`;
+
+  const app = document.getElementById('app');
+  app.innerHTML = `
+    ${GPU_FAMILIES.map(f => renderChartCard(f, latest, history)).join('')}
+    <div class="table-card">
+      <div class="table-header">
+        <div>
+          <h2>Live source data</h2>
+          <span>${today} · per-provider records feeding the blend</span>
+        </div>
+        <div class="gpu-tabs" id="gpuTabs">
+          <button class="gpu-tab active" data-family="ALL">All</button>
+          ${GPU_FAMILIES.map(f => `<button class="gpu-tab" data-family="${f}">${f}</button>`).join('')}
+        </div>
+      </div>
+      <table>
+        <thead><tr>
+          <th>Provider</th><th>GPU</th><th>Region</th><th>Instance</th>
+          <th class="right">GPUs</th><th class="right">€/GPU/hr</th><th></th>
+        </tr></thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>`;
+
+  GPU_FAMILIES.forEach(f => drawChart(f, history));
+
+  const applyFilter = fam => {
+    document.getElementById('tableBody').innerHTML = renderTableRows(latest, fam);
+  };
+  applyFilter('ALL');
+
+  document.getElementById('gpuTabs').addEventListener('click', e => {
+    const btn = e.target.closest('.gpu-tab');
+    if (!btn) return;
+    document.querySelectorAll('.gpu-tab').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    applyFilter(btn.dataset.family);
+  });
+}
+
+loadData().then(render).catch(err => {
+  document.getElementById('app').innerHTML =
+    `<div class="loading"><p style="color:#f85149">Failed to load data: ${err.message}</p></div>`;
+});
 </script>
 </body>
 </html>
