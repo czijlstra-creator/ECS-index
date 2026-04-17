@@ -122,108 +122,67 @@ CSV_FIELDS = [
 
 
 # ── Gcore ─────────────────────────────────────────────────────────────────────
-def fetch_gcore_prices(api_key: str) -> list[dict]:
-    results = []
-    headers = {"Authorization": f"APIKey {api_key}"}
 
-    # Stap 1: alle regio's ophalen
-    regions_url = "https://api.gcore.com/cloud/v1/regions"
+def fetch_gcore_prices(api_key: str = None) -> list[dict]:
+    import re
+    url = "https://gcore.com/pricing/ai"
     try:
-        rr = requests.get(regions_url, headers=headers, timeout=30)
-        rr.raise_for_status()
-        regions_data = rr.json()
+        r = requests.get(url, timeout=20, headers={"User-Agent": "Mozilla/5.0"})
+        r.raise_for_status()
     except Exception as e:
-        print(f"  WAARSCHUWING: Gcore regions-endpoint fout: {e}")
-        regions = [{"id": GCORE_REGION_ID, "display_name": GCORE_REGION}]
-    else:
-        regions_items = (
-            regions_data.get("results") if isinstance(regions_data, dict) else regions_data
-        )
-        regions = [
-            {"id": r.get("id"), "display_name": r.get("display_name") or r.get("name")}
-            for r in (regions_items or [])
-            if isinstance(r, dict) and r.get("id") is not None
-        ] or [{"id": GCORE_REGION_ID, "display_name": GCORE_REGION}]
+        print(f"  WAARSCHUWING: Gcore pricing page niet bereikbaar: {e}")
+        return []
 
-    print(f"  [Gcore] {len(regions)} regio's aangetroffen")
+    text = re.sub(r"<[^>]+>", " ", r.text)
+    text = re.sub(r"\s+", " ", text)
 
-    # Stap 2: per regio bmflavors + prijzen ophalen
-    all_flavors = []
-    for region in regions:
-        region_id = region["id"]
-        region_name = region["display_name"]
-        url = (
-            f"https://api.gcore.com/cloud/v1/bmflavors/"
-            f"{GCORE_PROJECT_ID}/{region_id}?include_prices=true"
-        )
-        try:
-            resp = requests.get(url, headers=headers, timeout=30)
-            if resp.status_code in (403, 404):
-                continue  # project heeft geen toegang tot deze regio
-            resp.raise_for_status()
-            data = resp.json()
-        except Exception as e:
-            print(f"  WAARSCHUWING: Gcore regio {region_name}: {e}")
+    # Vind de 'On-demand/h' rij (hyphen kan unicode zijn) en pak tot 'Reserve 12'
+    m = re.search(r"On[\u2010-\u2015\-]?demand/h(.{0,2000}?)Reserve\s+12", text, re.IGNORECASE)
+    if not m:
+        print("  WAARSCHUWING: Gcore pricing: On-demand-rij niet gevonden")
+        return []
+    row = m.group(1)
+
+    per_gpu = re.findall(r"€\s*(\d+\.\d+)\s*per\s*GPU", row, re.IGNORECASE)
+    if len(per_gpu) < 4:
+        print(f"  WAARSCHUWING: Gcore pricing: slechts {len(per_gpu)} per-GPU prijzen gevonden in rij")
+        return []
+
+    # Volgorde op de pagina: H100, A100, L40S, H200 (GB200 = 'Contact sales', geen prijs)
+    gpu_order = ["H100", "A100", "L40S", "H200"]
+    price_map = dict(zip(gpu_order, [float(p) for p in per_gpu[:4]]))
+
+    # Config: welke GPU's tracken we, met node-grootte en sanity-ranges
+    gcore_page_config = [
+        ("H100", 8, (1.50, 5.00)),
+        ("H200", 8, (2.00, 6.00)),
+        ("L40S", 8, (0.80, 3.00)),
+    ]
+
+    records = []
+    for gpu_model, gpu_count, (lo, hi) in gcore_page_config:
+        price_per_gpu = price_map.get(gpu_model)
+        if price_per_gpu is None:
+            print(f"  WAARSCHUWING: Gcore pricing: {gpu_model} niet gevonden op pagina")
             continue
-        items = data.get("results") if isinstance(data, dict) else data
-        for it in (items or []):
-            if isinstance(it, dict):
-                it["_region_name"] = region_name
-                all_flavors.append(it)
-
-    # Diagnostic: welke GPU-flavors zijn in totaal zichtbaar?
-    gpu_names = sorted({
-        f.get("flavor_name") for f in all_flavors
-        if f.get("flavor_name") and any(
-            g in f["flavor_name"].lower()
-            for g in ("h100", "h200", "l40s", "b200", "gb200")
-        )
-    })
-    print(f"  [Gcore] GPU-flavors over alle regio's: {gpu_names}")
-
-    # Stap 3: matchen tegen onze config
-    for gpu_model, flavor_slug, gpu_count, (lo, hi) in _GCORE_GPUS:
-        item = next(
-            (f for f in all_flavors if f.get("flavor_name") == flavor_slug),
-            None,
-        )
-        if not item:
-            print(f"  WAARSCHUWING: Gcore flavor niet gevonden: {flavor_slug}")
-            continue
-
-        price_raw = item.get("price_per_hour")
-        if isinstance(price_raw, dict):
-            price_raw = price_raw.get("value") or price_raw.get("amount")
-
-        try:
-            price_per_node_hour = float(price_raw) if price_raw is not None else 0.0
-        except (TypeError, ValueError):
-            print(f"  WAARSCHUWING: Gcore prijs niet parsebaar voor {flavor_slug}: {price_raw}")
-            continue
-
-        if price_per_node_hour == 0.0:
-            print(f"  WAARSCHUWING: Gcore prijs 0.00 voor {flavor_slug}")
-            continue
-
-        price_per_gpu_hour = price_per_node_hour / gpu_count
-        if not (lo <= price_per_gpu_hour <= hi):
+        if not (lo <= price_per_gpu <= hi):
             print(
-                f"  WAARSCHUWING: Gcore {gpu_model} €{price_per_gpu_hour:.4f}/GPU/hr "
+                f"  WAARSCHUWING: Gcore {gpu_model} €{price_per_gpu:.4f}/GPU/hr "
                 f"buiten sanity-range {lo}-{hi} - overgeslagen"
             )
             continue
-
-        results.append({
+        price_per_node = price_per_gpu * gpu_count
+        records.append({
             "provider": "Gcore",
             "gpu_model": gpu_model,
-            "region": item.get("_region_name", GCORE_REGION),
-            "instance_type": flavor_slug,
+            "region": "EU (Luxembourg / Amsterdam)",
+            "instance_type": f"bm-8x{gpu_model.lower()}",
             "gpu_count": gpu_count,
-            "price_per_hour_eur": round(price_per_node_hour, 4),
-            "price_per_gpu_hour_eur": round(price_per_gpu_hour, 4),
-            "note": "Gcore bare-metal cloud-API (multi-region)",
+            "price_per_hour_eur": round(price_per_node, 4),
+            "price_per_gpu_hour_eur": round(price_per_gpu, 4),
+            "note": "Gcore bare-metal list-price (pricing page)",
         })
-    return results
+    return records
 
 # ── OVHcloud ──────────────────────────────────────────────────────────────────
 
