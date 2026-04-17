@@ -1,6 +1,6 @@
 {
   "date": "2026-04-17",
-  "fetched": "2026-04-17T09:41:57.192408+00:00",
+  "fetched": "2026-04-17T10:43:33.693144+00:00",
   "prices": [
     {
       "provider": "Gcore",
@@ -114,8 +114,88 @@
     },
     {
       "provider": "Verda",
+      "gpu_model": "B200",
+      "region": "EU (FI/IS)",
+      "instance_type": "1B200.30V",
+      "gpu_count": 1,
+      "price_per_hour_eur": 4.235,
+      "price_per_gpu_hour_eur": 4.235,
+      "note": "1x B200 SXM6 180GB"
+    },
+    {
+      "provider": "Verda",
+      "gpu_model": "B200",
+      "region": "EU (FI/IS)",
+      "instance_type": "2B200.60V",
+      "gpu_count": 2,
+      "price_per_hour_eur": 8.469,
+      "price_per_gpu_hour_eur": 4.2345,
+      "note": "2x B200 SXM6 180GB"
+    },
+    {
+      "provider": "Verda",
+      "gpu_model": "B200",
+      "region": "EU (FI/IS)",
+      "instance_type": "4B200.120V",
+      "gpu_count": 4,
+      "price_per_hour_eur": 16.94,
+      "price_per_gpu_hour_eur": 4.235,
+      "note": "4x B200 SXM6 180GB"
+    },
+    {
+      "provider": "Verda",
+      "gpu_model": "B200",
+      "region": "EU (FI/IS)",
+      "instance_type": "8B200.240V",
+      "gpu_count": 8,
+      "price_per_hour_eur": 33.88,
+      "price_per_gpu_hour_eur": 4.235,
+      "note": "8x B200 SXM6 180GB"
+    },
+    {
+      "provider": "Verda",
+      "gpu_model": "H200",
+      "region": "EU (FI/IS)",
+      "instance_type": "1H200.141S.44V",
+      "gpu_count": 1,
+      "price_per_hour_eur": 2.936,
+      "price_per_gpu_hour_eur": 2.936,
+      "note": "1x H200 SXM5 141GB"
+    },
+    {
+      "provider": "Verda",
+      "gpu_model": "H200",
+      "region": "EU (FI/IS)",
+      "instance_type": "2H200.141S.88V",
+      "gpu_count": 2,
+      "price_per_hour_eur": 5.871,
+      "price_per_gpu_hour_eur": 2.9355,
+      "note": "2x H200 SXM5 141GB"
+    },
+    {
+      "provider": "Verda",
+      "gpu_model": "H200",
+      "region": "EU (FI/IS)",
+      "instance_type": "4H200.141S.176V",
+      "gpu_count": 4,
+      "price_per_hour_eur": 11.74,
+      "price_per_gpu_hour_eur": 2.935,
+      "note": "4x H200 SXM5 141GB"
+    },
+    {
+      "provider": "Verda",
+      "gpu_model": "H200",
+      "region": "EU (FI/IS)",
+      "instance_type": "8H200.141S.176V",
+      "gpu_count": 8,
+      "price_per_hour_eur": 23.49,
+      "price_per_gpu_hour_eur": 2.9362,
+      "note": "8x H200 SXM5 141GB"
+    },
+    {
+      "provider": "Verda",
       "gpu_model": "H100",
-      "region": "EU (FI)",
+      "region": "EU (FI/IS)",
       "instance_type": "1H100.80S.30V",
       "gpu_count": 1,
       "price_per_hour_eur": 1.983,
@@ -125,7 +205,7 @@
     {
       "provider": "Verda",
       "gpu_model": "H100",
-      "region": "EU (FI)",
+      "region": "EU (FI/IS)",
       "instance_type": "1H100.80S.32V",
       "gpu_count": 1,
       "price_per_hour_eur": 1.983,
@@ -135,7 +215,7 @@
     {
       "provider": "Verda",
       "gpu_model": "H100",
-      "region": "EU (FI)",
+      "region": "EU (FI/IS)",
       "instance_type": "2H100.80S.80V",
       "gpu_count": 2,
       "price_per_hour_eur": 3.966,
@@ -145,7 +225,7 @@
     {
       "provider": "Verda",
       "gpu_model": "H100",
-      "region": "EU (FI)",
+      "region": "EU (FI/IS)",
       "instance_type": "4H100.80S.176V",
       "gpu_count": 4,
       "price_per_hour_eur": 7.932,
@@ -155,7 +235,7 @@
     {
       "provider": "Verda",
       "gpu_model": "H100",
-      "region": "EU (FI)",
+      "region": "EU (FI/IS)",
       "instance_type": "8H100.80S.176V",
       "gpu_count": 8,
       "price_per_hour_eur": 15.86,
