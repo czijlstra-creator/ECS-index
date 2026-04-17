@@ -121,43 +121,85 @@ CSV_FIELDS = [
 # ── Gcore ─────────────────────────────────────────────────────────────────────
 
 def fetch_gcore_prices(api_key: str) -> list[dict]:
-    """Haal on-demand per-uur prijzen op voor Gcore bare-metal GPU-flavors."""
+    """
+    Haalt on-demand per-uur prijzen op voor Gcore bare-metal GPU-flavors.
+    Itereert over _GCORE_GPUS en matcht op flavor_slug.
+    Heeft defensieve field-matching zodat we ook werken als Gcore hun
+    response-veldnamen licht wijzigt. Print diagnostiek bij mismatch.
+    """
     results = []
     headers = {"Authorization": f"APIKey {api_key}"}
-    base_url = (
-        f"https://api.gcore.com/cloud/v1/prices/bmflavors/"
+    url = (
+        f"https://api.gcore.com/cloud/v1/pricing/bmflavors/"
         f"{GCORE_PROJECT_ID}/{GCORE_REGION_ID}"
     )
 
     try:
-        resp = requests.get(base_url, headers=headers, timeout=30)
+        resp = requests.get(url, headers=headers, timeout=30)
         resp.raise_for_status()
-        items = resp.json().get("results", [])
     except Exception as e:
-        print(f"[Gcore] API-fout: {e}")
+        print(f"  WAARSCHUWING: Gcore HTTP-fout {url}: {e}")
         return results
 
+    try:
+        data = resp.json()
+    except ValueError:
+        print(f"  WAARSCHUWING: Gcore response is geen JSON - eerste 200 chars: {resp.text[:200]}")
+        return results
+
+    items = data.get("results") if isinstance(data, dict) else data
+    if not items:
+        keys = list(data.keys()) if isinstance(data, dict) else "niet-dict"
+        print(f"  WAARSCHUWING: Gcore lege response - top-level keys: {keys}")
+        return results
+
+    # Eenmalige diagnose: welke velden retourneert Gcore?
+    sample = items[0] if isinstance(items[0], dict) else {}
+    print(f"  [Gcore] voorbeeld-item keys: {sorted(sample.keys())}")
+
     for gpu_model, flavor_slug, gpu_count, (lo, hi) in _GCORE_GPUS:
+        # Match op verschillende veldnamen voor flavor-identifier
         flavor = next(
-            (it for it in items if it.get("flavor_name") == flavor_slug),
+            (
+                it for it in items
+                if it.get("flavor_name") == flavor_slug
+                or it.get("name") == flavor_slug
+                or it.get("flavor") == flavor_slug
+            ),
             None,
         )
         if not flavor:
-            print(f"[Gcore] flavor niet in response: {flavor_slug}")
+            print(f"  WAARSCHUWING: Gcore flavor niet gevonden: {flavor_slug}")
             continue
 
-        price_per_node_hour = float(flavor.get("price_per_hour", 0.0))
+        # Probeer verschillende veldnamen voor prijs
+        price_raw = flavor.get("price_per_hour")
+        if price_raw is None:
+            price_raw = flavor.get("hourly_price")
+        if price_raw is None:
+            price_field = flavor.get("price")
+            price_raw = price_field.get("value") if isinstance(price_field, dict) else price_field
+
+        try:
+            price_per_node_hour = float(price_raw) if price_raw is not None else 0.0
+        except (TypeError, ValueError):
+            print(f"  WAARSCHUWING: Gcore prijs niet parsebaar voor {flavor_slug}: {price_raw}")
+            continue
+
+        if price_per_node_hour == 0.0:
+            print(f"  WAARSCHUWING: Gcore prijs 0.00 voor {flavor_slug} - item keys: {sorted(flavor.keys())}")
+            continue
+
         price_per_gpu_hour = price_per_node_hour / gpu_count
 
         if not (lo <= price_per_gpu_hour <= hi):
             print(
-                f"[Gcore] sanity fail {gpu_model}: "
-                f"{price_per_gpu_hour:.4f} EUR buiten {lo}-{hi}"
+                f"  WAARSCHUWING: Gcore {gpu_model} €{price_per_gpu_hour:.4f}/GPU/hr "
+                f"buiten sanity-range {lo}-{hi} - overgeslagen"
             )
             continue
 
         results.append({
-            "date": date.today().isoformat(),
             "provider": "Gcore",
             "gpu_model": gpu_model,
             "region": GCORE_REGION,
@@ -169,8 +211,6 @@ def fetch_gcore_prices(api_key: str) -> list[dict]:
         })
 
     return results
-
-
 # ── OVHcloud ──────────────────────────────────────────────────────────────────
 
 def fetch_ovhcloud_prices() -> list[dict]:
