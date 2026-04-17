@@ -1,7 +1,37 @@
 {
   "date": "2026-04-17",
-  "fetched": "2026-04-17T11:20:59.103803+00:00",
+  "fetched": "2026-04-17T11:36:34.134433+00:00",
   "prices": [
+    {
+      "provider": "OVHcloud",
+      "gpu_model": "H100 SXM",
+      "region": "EU (FR)",
+      "instance_type": "h100-380.consumption",
+      "gpu_count": 4,
+      "price_per_hour_eur": 2.8,
+      "price_per_gpu_hour_eur": 0.7,
+      "note": "H100 SXM 4-GPU bare metal"
+    },
+    {
+      "provider": "OVHcloud",
+      "gpu_model": "H100 SXM",
+      "region": "EU (FR)",
+      "instance_type": "h100-760.consumption",
+      "gpu_count": 8,
+      "price_per_hour_eur": 5.6,
+      "price_per_gpu_hour_eur": 0.7,
+      "note": "H100 SXM 8-GPU bare metal"
+    },
+    {
+      "provider": "OVHcloud",
+      "gpu_model": "H100 SXM",
+      "region": "EU (FR)",
+      "instance_type": "h100-1520.consumption",
+      "gpu_count": 16,
+      "price_per_hour_eur": 11.2,
+      "price_per_gpu_hour_eur": 0.7,
+      "note": "H100 SXM 16-GPU bare metal"
+    },
     {
       "provider": "Scaleway",
       "gpu_model": "H100 SXM",
