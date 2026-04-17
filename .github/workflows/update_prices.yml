@@ -2,7 +2,7 @@ name: ECS dagelijkse prijsupdate
 
 on:
   schedule:
-  - cron: '0 15 * * 1-5' # 15:00 UTC = 17:00 CET, werkdagen
+  - cron: '0 3,9,15,21 * * *' # 4x per dag: 03/09/15/21 UTC (15 UTC anchor = 17 CET)
   workflow_dispatch: # ook handmatig te triggeren via GitHub UI
 
 permissions:
