@@ -4039,3 +4039,24 @@ date,provider,gpu_model,region,instance_type,gpu_count,price_per_hour_eur,price_
 2026-05-19,Genesis Cloud,H100,EU (NO/FR/ES/FI),hgx-h100-1gpu,1,1.8847,1.8847,"on-demand per GPU, $2.19/GPU/hr x ECB 0.8606"
 2026-05-19,Genesis Cloud,H200,EU (FR/ES/FI),hgx-h200-1gpu,1,2.4097,2.4097,"on-demand per GPU, $2.8/GPU/hr x ECB 0.8606"
 2026-05-19,Genesis Cloud,B200,EU (NO),hgx-b200-1gpu,1,3.2272,3.2272,"on-demand per GPU, $3.75/GPU/hr x ECB 0.8606"
+2026-05-20,Gcore,H100,EU (Luxembourg / Amsterdam),bm-8xh100,8,16.0,2.0,Gcore bare-metal list-price (pricing page)
+2026-05-20,Gcore,H200,EU (Luxembourg / Amsterdam),bm-8xh200,8,18.0,2.25,Gcore bare-metal list-price (pricing page)
+2026-05-20,Gcore,L40S,EU (Luxembourg / Amsterdam),bm-8xl40s,8,8.64,1.08,Gcore bare-metal list-price (pricing page)
+2026-05-20,OVHcloud,H100 SXM,EU (FR),h100-380.consumption,4,2.8,0.7,H100 SXM 4-GPU bare metal
+2026-05-20,OVHcloud,H100 SXM,EU (FR),h100-760.consumption,8,5.6,0.7,H100 SXM 8-GPU bare metal
+2026-05-20,OVHcloud,H100 SXM,EU (FR),h100-1520.consumption,16,11.2,0.7,H100 SXM 16-GPU bare metal
+2026-05-20,Scaleway,H100 SXM,EU (AMS/PAR),H100-1-80G,1,2.73,2.73,zone fr-par-2
+2026-05-20,Scaleway,H100 SXM,EU (AMS/PAR),H100-1-M,1,4.2,4.2,zone fr-par-2
+2026-05-20,Scaleway,H100 SXM,EU (AMS/PAR),H100-2-80G,2,5.46,2.73,zone fr-par-2
+2026-05-20,Scaleway,H100 SXM,EU (AMS/PAR),H100-2-M,2,8.4,4.2,zone fr-par-2
+2026-05-20,Scaleway,H100 SXM,EU (AMS/PAR),H100-SXM-2-80G,2,6.018,3.009,zone fr-par-2
+2026-05-20,Scaleway,H100 SXM,EU (AMS/PAR),H100-SXM-4-80G,4,11.61,2.9025,zone fr-par-2
+2026-05-20,Scaleway,H100 SXM,EU (AMS/PAR),H100-SXM-8-80G,8,23.028,2.8785,zone fr-par-2
+2026-05-20,Nebius,H100 NVL,"EU (FI, eu-north1)",h100-nvl-1gpu,1,1.8227,1.8227,"on-demand, $2.118/GPU/hr x ECB 0.8606"
+2026-05-20,Nebius,H200 NVL,"EU (FI/FR, eu-north1/eu-west1)",h200-nvl-1gpu,1,2.2961,2.2961,"on-demand, $2.668/GPU/hr x ECB 0.8606"
+2026-05-20,CoreWeave,H100,EU (NL/NO),hgx-h100-8gpu,8,42.3755,5.2969,"on-demand 8-GPU node, $49.24/node x ECB 0.8606"
+2026-05-20,CoreWeave,H200,EU (NL/NO),hgx-h200-8gpu,8,43.4082,5.426,"on-demand 8-GPU node, $50.44/node x ECB 0.8606"
+2026-05-20,CoreWeave,B200,EU (NL/NO),hgx-b200-8gpu,8,59.2086,7.4011,"on-demand 8-GPU node, $68.8/node x ECB 0.8606"
+2026-05-20,Genesis Cloud,H100,EU (NO/FR/ES/FI),hgx-h100-1gpu,1,1.8847,1.8847,"on-demand per GPU, $2.19/GPU/hr x ECB 0.8606"
+2026-05-20,Genesis Cloud,H200,EU (FR/ES/FI),hgx-h200-1gpu,1,2.4097,2.4097,"on-demand per GPU, $2.8/GPU/hr x ECB 0.8606"
+2026-05-20,Genesis Cloud,B200,EU (NO),hgx-b200-1gpu,1,3.2272,3.2272,"on-demand per GPU, $3.75/GPU/hr x ECB 0.8606"
