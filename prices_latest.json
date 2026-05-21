@@ -1,6 +1,6 @@
 {
   "date": "2026-05-21",
-  "fetched": "2026-05-21T11:59:08.735279+00:00",
+  "fetched": "2026-05-21T17:25:32.661953+00:00",
   "prices": [
     {
       "provider": "Gcore",
@@ -268,8 +268,8 @@
       "region": "EU (NL/NO)",
       "instance_type": "hgx-h100-8gpu",
       "gpu_count": 8,
-      "price_per_hour_eur": 42.4483,
-      "price_per_gpu_hour_eur": 5.306,
+      "price_per_hour_eur": 42.4518,
+      "price_per_gpu_hour_eur": 5.3065,
       "note": "on-demand 8-GPU node, $49.24/node x ECB 0.8621"
     },
     {
@@ -278,8 +278,8 @@
       "region": "EU (NL/NO)",
       "instance_type": "hgx-h200-8gpu",
       "gpu_count": 8,
-      "price_per_hour_eur": 43.4828,
-      "price_per_gpu_hour_eur": 5.4354,
+      "price_per_hour_eur": 43.4863,
+      "price_per_gpu_hour_eur": 5.4358,
       "note": "on-demand 8-GPU node, $50.44/node x ECB 0.8621"
     },
     {
@@ -288,8 +288,8 @@
       "region": "EU (NL/NO)",
       "instance_type": "hgx-b200-8gpu",
       "gpu_count": 8,
-      "price_per_hour_eur": 59.3104,
-      "price_per_gpu_hour_eur": 7.4138,
+      "price_per_hour_eur": 59.3152,
+      "price_per_gpu_hour_eur": 7.4144,
       "note": "on-demand 8-GPU node, $68.8/node x ECB 0.8621"
     },
     {
@@ -298,8 +298,8 @@
       "region": "EU (NO/FR/ES/FI)",
       "instance_type": "hgx-h100-1gpu",
       "gpu_count": 1,
-      "price_per_hour_eur": 1.8879,
-      "price_per_gpu_hour_eur": 1.8879,
+      "price_per_hour_eur": 1.8881,
+      "price_per_gpu_hour_eur": 1.8881,
       "note": "on-demand per GPU, $2.19/GPU/hr x ECB 0.8621"
     },
     {
@@ -308,8 +308,8 @@
       "region": "EU (FR/ES/FI)",
       "instance_type": "hgx-h200-1gpu",
       "gpu_count": 1,
-      "price_per_hour_eur": 2.4138,
-      "price_per_gpu_hour_eur": 2.4138,
+      "price_per_hour_eur": 2.414,
+      "price_per_gpu_hour_eur": 2.414,
       "note": "on-demand per GPU, $2.8/GPU/hr x ECB 0.8621"
     },
     {
@@ -318,8 +318,8 @@
       "region": "EU (NO)",
       "instance_type": "hgx-b200-1gpu",
       "gpu_count": 1,
-      "price_per_hour_eur": 3.2328,
-      "price_per_gpu_hour_eur": 3.2328,
+      "price_per_hour_eur": 3.233,
+      "price_per_gpu_hour_eur": 3.233,
       "note": "on-demand per GPU, $3.75/GPU/hr x ECB 0.8621"
     }
   ]
