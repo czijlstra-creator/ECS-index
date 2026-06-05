@@ -1,6 +1,6 @@
 {
   "date": "2026-06-05",
-  "fetched": "2026-06-05T06:55:38.228829+00:00",
+  "fetched": "2026-06-05T11:54:24.732177+00:00",
   "prices": [
     {
       "provider": "Gcore",
@@ -8,8 +8,8 @@
       "region": "EU (Luxembourg / Amsterdam)",
       "instance_type": "bm-8xh100",
       "gpu_count": 8,
-      "price_per_hour_eur": 16.0,
-      "price_per_gpu_hour_eur": 2.0,
+      "price_per_hour_eur": 18.16,
+      "price_per_gpu_hour_eur": 2.27,
       "note": "Gcore bare-metal list-price (pricing page)"
     },
     {
@@ -18,8 +18,8 @@
       "region": "EU (Luxembourg / Amsterdam)",
       "instance_type": "bm-8xh200",
       "gpu_count": 8,
-      "price_per_hour_eur": 18.0,
-      "price_per_gpu_hour_eur": 2.25,
+      "price_per_hour_eur": 21.84,
+      "price_per_gpu_hour_eur": 2.73,
       "note": "Gcore bare-metal list-price (pricing page)"
     },
     {
@@ -28,8 +28,8 @@
       "region": "EU (Luxembourg / Amsterdam)",
       "instance_type": "bm-8xl40s",
       "gpu_count": 8,
-      "price_per_hour_eur": 8.64,
-      "price_per_gpu_hour_eur": 1.08,
+      "price_per_hour_eur": 8.72,
+      "price_per_gpu_hour_eur": 1.09,
       "note": "Gcore bare-metal list-price (pricing page)"
     },
     {
