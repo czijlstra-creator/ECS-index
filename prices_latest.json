@@ -1,7 +1,37 @@
 {
   "date": "2026-06-09",
-  "fetched": "2026-06-09T17:15:40.605747+00:00",
+  "fetched": "2026-06-09T22:16:35.732467+00:00",
   "prices": [
+    {
+      "provider": "Gcore",
+      "gpu_model": "H100",
+      "region": "EU (Luxembourg / Amsterdam)",
+      "instance_type": "bm-8xh100",
+      "gpu_count": 8,
+      "price_per_hour_eur": 18.16,
+      "price_per_gpu_hour_eur": 2.27,
+      "note": "Gcore bare-metal list-price (pricing page)"
+    },
+    {
+      "provider": "Gcore",
+      "gpu_model": "H200",
+      "region": "EU (Luxembourg / Amsterdam)",
+      "instance_type": "bm-8xh200",
+      "gpu_count": 8,
+      "price_per_hour_eur": 21.84,
+      "price_per_gpu_hour_eur": 2.73,
+      "note": "Gcore bare-metal list-price (pricing page)"
+    },
+    {
+      "provider": "Gcore",
+      "gpu_model": "L40S",
+      "region": "EU (Luxembourg / Amsterdam)",
+      "instance_type": "bm-8xl40s",
+      "gpu_count": 8,
+      "price_per_hour_eur": 8.72,
+      "price_per_gpu_hour_eur": 1.09,
+      "note": "Gcore bare-metal list-price (pricing page)"
+    },
     {
       "provider": "OVHcloud",
       "gpu_model": "H100 SXM",
