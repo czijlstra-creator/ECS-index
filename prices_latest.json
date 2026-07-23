@@ -1,6 +1,6 @@
 {
   "date": "2026-07-23",
-  "fetched": "2026-07-23T10:55:18.476947+00:00",
+  "fetched": "2026-07-23T16:16:54.038231+00:00",
   "prices": [
     {
       "provider": "Gcore",
@@ -90,26 +90,6 @@
       "gpu_count": 2,
       "price_per_hour_eur": 6.6198,
       "price_per_gpu_hour_eur": 3.3099,
-      "note": "zone fr-par-2"
-    },
-    {
-      "provider": "Scaleway",
-      "gpu_model": "H100 SXM",
-      "region": "EU (AMS/PAR)",
-      "instance_type": "H100-SXM-4-80G",
-      "gpu_count": 4,
-      "price_per_hour_eur": 12.771,
-      "price_per_gpu_hour_eur": 3.1928,
-      "note": "zone fr-par-2"
-    },
-    {
-      "provider": "Scaleway",
-      "gpu_model": "H100 SXM",
-      "region": "EU (AMS/PAR)",
-      "instance_type": "H100-SXM-8-80G",
-      "gpu_count": 8,
-      "price_per_hour_eur": 25.3308,
-      "price_per_gpu_hour_eur": 3.1663,
       "note": "zone fr-par-2"
     },
     {
@@ -248,9 +228,9 @@
       "region": "EU (NL/NO)",
       "instance_type": "hgx-h100-8gpu",
       "gpu_count": 8,
-      "price_per_hour_eur": 43.1628,
-      "price_per_gpu_hour_eur": 5.3953,
-      "note": "on-demand 8-GPU node, $49.24/node x ECB 0.8766"
+      "price_per_hour_eur": 43.2234,
+      "price_per_gpu_hour_eur": 5.4029,
+      "note": "on-demand 8-GPU node, $49.24/node x ECB 0.8778"
     },
     {
       "provider": "CoreWeave",
@@ -258,9 +238,9 @@
       "region": "EU (NL/NO)",
       "instance_type": "hgx-h200-8gpu",
       "gpu_count": 8,
-      "price_per_hour_eur": 44.2147,
-      "price_per_gpu_hour_eur": 5.5268,
-      "note": "on-demand 8-GPU node, $50.44/node x ECB 0.8766"
+      "price_per_hour_eur": 44.2767,
+      "price_per_gpu_hour_eur": 5.5346,
+      "note": "on-demand 8-GPU node, $50.44/node x ECB 0.8778"
     },
     {
       "provider": "CoreWeave",
@@ -268,9 +248,9 @@
       "region": "EU (NL/NO)",
       "instance_type": "hgx-b200-8gpu",
       "gpu_count": 8,
-      "price_per_hour_eur": 60.3087,
-      "price_per_gpu_hour_eur": 7.5386,
-      "note": "on-demand 8-GPU node, $68.8/node x ECB 0.8766"
+      "price_per_hour_eur": 60.3933,
+      "price_per_gpu_hour_eur": 7.5492,
+      "note": "on-demand 8-GPU node, $68.8/node x ECB 0.8778"
     }
   ]
 }
