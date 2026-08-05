@@ -1,6 +1,6 @@
 {
   "date": "2026-08-05",
-  "fetched": "2026-08-05T11:09:37.388940+00:00",
+  "fetched": "2026-08-05T16:24:07.806623+00:00",
   "prices": [
     {
       "provider": "Gcore",
@@ -98,8 +98,8 @@
       "region": "EU (FI/IS)",
       "instance_type": "1B200.30V",
       "gpu_count": 1,
-      "price_per_hour_eur": 5.352,
-      "price_per_gpu_hour_eur": 5.352,
+      "price_per_hour_eur": 5.345,
+      "price_per_gpu_hour_eur": 5.345,
       "note": "1x B200 SXM6 180GB"
     },
     {
@@ -108,8 +108,8 @@
       "region": "EU (FI/IS)",
       "instance_type": "2B200.60V",
       "gpu_count": 2,
-      "price_per_hour_eur": 10.7,
-      "price_per_gpu_hour_eur": 5.35,
+      "price_per_hour_eur": 10.69,
+      "price_per_gpu_hour_eur": 5.345,
       "note": "2x B200 SXM6 180GB"
     },
     {
@@ -118,8 +118,8 @@
       "region": "EU (FI/IS)",
       "instance_type": "4B200.120V",
       "gpu_count": 4,
-      "price_per_hour_eur": 21.41,
-      "price_per_gpu_hour_eur": 5.3525,
+      "price_per_hour_eur": 21.38,
+      "price_per_gpu_hour_eur": 5.345,
       "note": "4x B200 SXM6 180GB"
     },
     {
@@ -128,8 +128,8 @@
       "region": "EU (FI/IS)",
       "instance_type": "8B200.240V",
       "gpu_count": 8,
-      "price_per_hour_eur": 42.81,
-      "price_per_gpu_hour_eur": 5.3513,
+      "price_per_hour_eur": 42.76,
+      "price_per_gpu_hour_eur": 5.345,
       "note": "8x B200 SXM6 180GB"
     },
     {
@@ -138,8 +138,8 @@
       "region": "EU (FI/IS)",
       "instance_type": "1H200.141S.44V",
       "gpu_count": 1,
-      "price_per_hour_eur": 3.504,
-      "price_per_gpu_hour_eur": 3.504,
+      "price_per_hour_eur": 3.499,
+      "price_per_gpu_hour_eur": 3.499,
       "note": "1x H200 SXM5 141GB"
     },
     {
@@ -148,8 +148,8 @@
       "region": "EU (FI/IS)",
       "instance_type": "2H200.141S.88V",
       "gpu_count": 2,
-      "price_per_hour_eur": 7.007,
-      "price_per_gpu_hour_eur": 3.5035,
+      "price_per_hour_eur": 6.999,
+      "price_per_gpu_hour_eur": 3.4995,
       "note": "2x H200 SXM5 141GB"
     },
     {
@@ -158,8 +158,8 @@
       "region": "EU (FI/IS)",
       "instance_type": "4H200.141S.176V",
       "gpu_count": 4,
-      "price_per_hour_eur": 14.01,
-      "price_per_gpu_hour_eur": 3.5025,
+      "price_per_hour_eur": 14.0,
+      "price_per_gpu_hour_eur": 3.5,
       "note": "4x H200 SXM5 141GB"
     },
     {
@@ -168,8 +168,8 @@
       "region": "EU (FI/IS)",
       "instance_type": "8H200.141S.176V",
       "gpu_count": 8,
-      "price_per_hour_eur": 28.03,
-      "price_per_gpu_hour_eur": 3.5038,
+      "price_per_hour_eur": 27.99,
+      "price_per_gpu_hour_eur": 3.4987,
       "note": "8x H200 SXM5 141GB"
     },
     {
@@ -178,8 +178,8 @@
       "region": "EU (FI/IS)",
       "instance_type": "1H100.80S.30V",
       "gpu_count": 1,
-      "price_per_hour_eur": 2.847,
-      "price_per_gpu_hour_eur": 2.847,
+      "price_per_hour_eur": 2.843,
+      "price_per_gpu_hour_eur": 2.843,
       "note": "1x H100 SXM5 80GB"
     },
     {
@@ -188,8 +188,8 @@
       "region": "EU (FI/IS)",
       "instance_type": "1H100.80S.32V",
       "gpu_count": 1,
-      "price_per_hour_eur": 2.847,
-      "price_per_gpu_hour_eur": 2.847,
+      "price_per_hour_eur": 2.843,
+      "price_per_gpu_hour_eur": 2.843,
       "note": "1x H100 SXM5 80GB"
     },
     {
@@ -198,8 +198,8 @@
       "region": "EU (FI/IS)",
       "instance_type": "2H100.80S.80V",
       "gpu_count": 2,
-      "price_per_hour_eur": 5.693,
-      "price_per_gpu_hour_eur": 2.8465,
+      "price_per_hour_eur": 5.686,
+      "price_per_gpu_hour_eur": 2.843,
       "note": "2x H100 SXM5 80GB"
     },
     {
@@ -208,8 +208,8 @@
       "region": "EU (FI/IS)",
       "instance_type": "4H100.80S.176V",
       "gpu_count": 4,
-      "price_per_hour_eur": 11.39,
-      "price_per_gpu_hour_eur": 2.8475,
+      "price_per_hour_eur": 11.37,
+      "price_per_gpu_hour_eur": 2.8425,
       "note": "4x H100 SXM5 80GB"
     },
     {
@@ -218,8 +218,8 @@
       "region": "EU (FI/IS)",
       "instance_type": "8H100.80S.176V",
       "gpu_count": 8,
-      "price_per_hour_eur": 22.77,
-      "price_per_gpu_hour_eur": 2.8462,
+      "price_per_hour_eur": 22.75,
+      "price_per_gpu_hour_eur": 2.8438,
       "note": "8x H100 SXM5 80GB"
     },
     {
@@ -228,9 +228,9 @@
       "region": "EU (NL/NO)",
       "instance_type": "hgx-h100-8gpu",
       "gpu_count": 8,
-      "price_per_hour_eur": 42.7615,
-      "price_per_gpu_hour_eur": 5.3452,
-      "note": "on-demand 8-GPU node, $49.24/node x ECB 0.8684"
+      "price_per_hour_eur": 42.6172,
+      "price_per_gpu_hour_eur": 5.3272,
+      "note": "on-demand 8-GPU node, $49.24/node x ECB 0.8655"
     },
     {
       "provider": "CoreWeave",
@@ -238,9 +238,9 @@
       "region": "EU (NL/NO)",
       "instance_type": "hgx-h200-8gpu",
       "gpu_count": 8,
-      "price_per_hour_eur": 43.8036,
-      "price_per_gpu_hour_eur": 5.4755,
-      "note": "on-demand 8-GPU node, $50.44/node x ECB 0.8684"
+      "price_per_hour_eur": 43.6558,
+      "price_per_gpu_hour_eur": 5.457,
+      "note": "on-demand 8-GPU node, $50.44/node x ECB 0.8655"
     },
     {
       "provider": "CoreWeave",
@@ -248,9 +248,9 @@
       "region": "EU (NL/NO)",
       "instance_type": "hgx-b200-8gpu",
       "gpu_count": 8,
-      "price_per_hour_eur": 59.748,
-      "price_per_gpu_hour_eur": 7.4685,
-      "note": "on-demand 8-GPU node, $68.8/node x ECB 0.8684"
+      "price_per_hour_eur": 59.5464,
+      "price_per_gpu_hour_eur": 7.4433,
+      "note": "on-demand 8-GPU node, $68.8/node x ECB 0.8655"
     }
   ]
 }
