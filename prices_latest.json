@@ -1,6 +1,6 @@
 {
   "date": "2026-10-28",
-  "fetched": "2026-10-28T09:01:58.982081+00:00",
+  "fetched": "2026-10-28T19:55:48.209172+00:00",
   "prices": [
     {
       "provider": "Gcore",
@@ -236,7 +236,7 @@
       "provider": "Verda",
       "gpu_model": "B200 CC",
       "region": "EU (FI/IS)",
-      "instance_type": "2B200.60V.CC",
+      "instance_type": "2B200.60V.CC.INTEL",
       "gpu_count": 2,
       "price_per_hour_eur": 15.91,
       "price_per_gpu_hour_eur": 7.955,
@@ -246,7 +246,17 @@
       "provider": "Verda",
       "gpu_model": "B200 CC",
       "region": "EU (FI/IS)",
-      "instance_type": "4B200.120V.CC",
+      "instance_type": "2B200.60V.CC.AMD",
+      "gpu_count": 2,
+      "price_per_hour_eur": 15.91,
+      "price_per_gpu_hour_eur": 7.955,
+      "note": "2x B200 CC SXM6 180GB"
+    },
+    {
+      "provider": "Verda",
+      "gpu_model": "B200 CC",
+      "region": "EU (FI/IS)",
+      "instance_type": "4B200.120V.CC.AMD",
       "gpu_count": 4,
       "price_per_hour_eur": 31.81,
       "price_per_gpu_hour_eur": 7.9525,
@@ -256,7 +266,27 @@
       "provider": "Verda",
       "gpu_model": "B200 CC",
       "region": "EU (FI/IS)",
-      "instance_type": "8B200.240V.CC",
+      "instance_type": "4B200.120V.CC.INTEL",
+      "gpu_count": 4,
+      "price_per_hour_eur": 31.81,
+      "price_per_gpu_hour_eur": 7.9525,
+      "note": "4x B200 CC SXM6 180GB"
+    },
+    {
+      "provider": "Verda",
+      "gpu_model": "B200 CC",
+      "region": "EU (FI/IS)",
+      "instance_type": "8B200.240V.CC.INTEL",
+      "gpu_count": 8,
+      "price_per_hour_eur": 63.63,
+      "price_per_gpu_hour_eur": 7.9538,
+      "note": "8x B200 CC SXM6 180GB"
+    },
+    {
+      "provider": "Verda",
+      "gpu_model": "B200 CC",
+      "region": "EU (FI/IS)",
+      "instance_type": "8B200.240V.CC.AMD",
       "gpu_count": 8,
       "price_per_hour_eur": 63.63,
       "price_per_gpu_hour_eur": 7.9538,
@@ -268,9 +298,9 @@
       "region": "EU (NL/NO)",
       "instance_type": "hgx-h100-8gpu",
       "gpu_count": 8,
-      "price_per_hour_eur": 44.1614,
-      "price_per_gpu_hour_eur": 5.5202,
-      "note": "on-demand 8-GPU node, $49.24/node x ECB 0.8969"
+      "price_per_hour_eur": 44.2288,
+      "price_per_gpu_hour_eur": 5.5286,
+      "note": "on-demand 8-GPU node, $49.24/node x ECB 0.8982"
     },
     {
       "provider": "CoreWeave",
@@ -278,9 +308,9 @@
       "region": "EU (NL/NO)",
       "instance_type": "hgx-h200-8gpu",
       "gpu_count": 8,
-      "price_per_hour_eur": 45.2376,
-      "price_per_gpu_hour_eur": 5.6547,
-      "note": "on-demand 8-GPU node, $50.44/node x ECB 0.8969"
+      "price_per_hour_eur": 45.3067,
+      "price_per_gpu_hour_eur": 5.6633,
+      "note": "on-demand 8-GPU node, $50.44/node x ECB 0.8982"
     },
     {
       "provider": "CoreWeave",
@@ -288,9 +318,9 @@
       "region": "EU (NL/NO)",
       "instance_type": "hgx-b200-8gpu",
       "gpu_count": 8,
-      "price_per_hour_eur": 61.704,
-      "price_per_gpu_hour_eur": 7.713,
-      "note": "on-demand 8-GPU node, $68.8/node x ECB 0.8969"
+      "price_per_hour_eur": 61.7982,
+      "price_per_gpu_hour_eur": 7.7248,
+      "note": "on-demand 8-GPU node, $68.8/node x ECB 0.8982"
     }
   ]
 }
