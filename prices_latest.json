@@ -1,6 +1,6 @@
 {
   "date": "2026-11-09",
-  "fetched": "2026-11-09T10:28:21.635480+00:00",
+  "fetched": "2026-11-09T23:37:19.946115+00:00",
   "prices": [
     {
       "provider": "Gcore",
@@ -198,9 +198,9 @@
       "region": "EU (NL/NO)",
       "instance_type": "hgx-h100-8gpu",
       "gpu_count": 8,
-      "price_per_hour_eur": 44.1023,
-      "price_per_gpu_hour_eur": 5.5128,
-      "note": "on-demand 8-GPU node, $49.24/node x ECB 0.8957"
+      "price_per_hour_eur": 43.992,
+      "price_per_gpu_hour_eur": 5.499,
+      "note": "on-demand 8-GPU node, $49.24/node x ECB 0.8934"
     },
     {
       "provider": "CoreWeave",
@@ -208,9 +208,9 @@
       "region": "EU (NL/NO)",
       "instance_type": "hgx-h200-8gpu",
       "gpu_count": 8,
-      "price_per_hour_eur": 45.1771,
-      "price_per_gpu_hour_eur": 5.6471,
-      "note": "on-demand 8-GPU node, $50.44/node x ECB 0.8957"
+      "price_per_hour_eur": 45.0641,
+      "price_per_gpu_hour_eur": 5.633,
+      "note": "on-demand 8-GPU node, $50.44/node x ECB 0.8934"
     },
     {
       "provider": "CoreWeave",
@@ -218,9 +218,9 @@
       "region": "EU (NL/NO)",
       "instance_type": "hgx-b200-8gpu",
       "gpu_count": 8,
-      "price_per_hour_eur": 61.6214,
-      "price_per_gpu_hour_eur": 7.7027,
-      "note": "on-demand 8-GPU node, $68.8/node x ECB 0.8957"
+      "price_per_hour_eur": 61.4673,
+      "price_per_gpu_hour_eur": 7.6834,
+      "note": "on-demand 8-GPU node, $68.8/node x ECB 0.8934"
     }
   ]
 }
