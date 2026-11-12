@@ -22144,3 +22144,25 @@ date,provider,gpu_model,region,instance_type,gpu_count,price_per_hour_eur,price_
 2026-11-11,CoreWeave,H100,EU (NL/NO),hgx-h100-8gpu,8,44.2525,5.5316,"on-demand 8-GPU node, $49.24/node x ECB 0.8987"
 2026-11-11,CoreWeave,H200,EU (NL/NO),hgx-h200-8gpu,8,45.3309,5.6664,"on-demand 8-GPU node, $50.44/node x ECB 0.8987"
 2026-11-11,CoreWeave,B200,EU (NL/NO),hgx-b200-8gpu,8,61.8312,7.7289,"on-demand 8-GPU node, $68.8/node x ECB 0.8987"
+2026-11-12,Gcore,H100,EU (Luxembourg / Amsterdam),bm-8xh100,8,21.84,2.73,Gcore bare-metal list-price (pricing page)
+2026-11-12,Gcore,H200,EU (Luxembourg / Amsterdam),bm-8xh200,8,25.44,3.18,Gcore bare-metal list-price (pricing page)
+2026-11-12,Gcore,L40S,EU (Luxembourg / Amsterdam),bm-8xl40s,8,10.16,1.27,Gcore bare-metal list-price (pricing page)
+2026-11-12,OVHcloud,H100 SXM,EU (FR),h100-380.consumption,4,2.8,0.7,H100 SXM 4-GPU bare metal
+2026-11-12,OVHcloud,H100 SXM,EU (FR),h100-760.consumption,8,5.6,0.7,H100 SXM 8-GPU bare metal
+2026-11-12,OVHcloud,H100 SXM,EU (FR),h100-1520.consumption,16,11.2,0.7,H100 SXM 16-GPU bare metal
+2026-11-12,Scaleway,H100 SXM,EU (AMS/PAR),H100-1-80G,1,0.0,0.0,zone fr-par-2
+2026-11-12,Scaleway,H100 SXM,EU (AMS/PAR),H100-2-80G,2,0.0,0.0,zone fr-par-2
+2026-11-12,Scaleway,H100 SXM,EU (AMS/PAR),H100-SXM-2-80G,2,0.0,0.0,zone fr-par-2
+2026-11-12,Scaleway,H100 SXM,EU (AMS/PAR),H100-SXM-4-80G,4,0.0,0.0,zone fr-par-2
+2026-11-12,Verda,H200,EU (FI/IS),1H200.141S.44V,1,5.904,5.904,1x H200 SXM5 141GB
+2026-11-12,Verda,H200,EU (FI/IS),2H200.141S.88V,2,11.81,5.905,2x H200 SXM5 141GB
+2026-11-12,Verda,H200,EU (FI/IS),4H200.141S.176V,4,23.61,5.9025,4x H200 SXM5 141GB
+2026-11-12,Verda,H200,EU (FI/IS),8H200.141S.176V,8,47.23,5.9037,8x H200 SXM5 141GB
+2026-11-12,Verda,H100,EU (FI/IS),1H100.80S.30V,1,4.618,4.618,1x H100 SXM5 80GB
+2026-11-12,Verda,H100,EU (FI/IS),1H100.80S.32V,1,4.618,4.618,1x H100 SXM5 80GB
+2026-11-12,Verda,H100,EU (FI/IS),2H100.80S.80V,2,9.235,4.6175,2x H100 SXM5 80GB
+2026-11-12,Verda,H100,EU (FI/IS),4H100.80S.176V,4,18.47,4.6175,4x H100 SXM5 80GB
+2026-11-12,Verda,H100,EU (FI/IS),8H100.80S.176V,8,36.94,4.6175,8x H100 SXM5 80GB
+2026-11-12,CoreWeave,H100,EU (NL/NO),hgx-h100-8gpu,8,44.2525,5.5316,"on-demand 8-GPU node, $49.24/node x ECB 0.8987"
+2026-11-12,CoreWeave,H200,EU (NL/NO),hgx-h200-8gpu,8,45.3309,5.6664,"on-demand 8-GPU node, $50.44/node x ECB 0.8987"
+2026-11-12,CoreWeave,B200,EU (NL/NO),hgx-b200-8gpu,8,61.8312,7.7289,"on-demand 8-GPU node, $68.8/node x ECB 0.8987"
